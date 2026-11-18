@@ -5,7 +5,7 @@ import random
 from io import BytesIO
 from gtts import gTTS
 
-# Sayfa Ayarları (Mobil uyumlu ve geniş ekran desteği)
+# Sayfa Ayarları
 st.set_page_config(
     page_title="VocabMaster | B1 & B2",
     page_icon="🌿",
@@ -13,74 +13,82 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Özel CSS Tasarımı (Yeşil Tonları ve Modern Kart Görünümü)
+# Özel CSS Tasarımı (Karanlık Mod Uyumlu, Net Kontrastlı Yeşil Tema)
 st.markdown("""
 <style>
     /* Genel Arka Plan ve Yazı Tipi */
     .stApp {
-        background-color: #F4F7F5;
+        background-color: #F4F7F5 !important;
+        color: #1B4332 !important;
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
     
     /* Ana Başlık */
     .main-title {
-        color: #1B4332;
+        color: #1B4332 !important;
         text-align: center;
         font-weight: 800;
         font-size: 2.2rem;
         margin-bottom: 0.2rem;
     }
     .sub-title {
-        color: #40916C;
+        color: #2D6A4F !important;
         text-align: center;
         font-size: 1rem;
+        font-weight: 500;
         margin-bottom: 1.5rem;
+    }
+
+    /* Genel Metin ve Etiket Renkleri (Karanlık modda silikleşmeyi önler) */
+    p, label, .stCaption, div[data-testid="stCaptionContainer"] {
+        color: #2D6A4F !important;
+        font-weight: 500;
     }
 
     /* Kelime Kartı Tasarımı */
     .word-card {
-        background-color: #FFFFFF;
+        background-color: #FFFFFF !important;
         border-radius: 20px;
         padding: 30px 25px;
-        box-shadow: 0 8px 24px rgba(27, 67, 50, 0.08);
+        box-shadow: 0 8px 24px rgba(27, 67, 50, 0.1);
         border-top: 6px solid #2D6A4F;
         text-align: center;
         margin-bottom: 20px;
     }
     .word-en {
-        color: #1B4332;
+        color: #1B4332 !important;
         font-size: 2.3rem;
         font-weight: 700;
         margin-bottom: 10px;
     }
     .word-tr {
-        color: #2D6A4F;
-        font-size: 1.4rem;
+        color: #1B4332 !important;
+        font-size: 1.35rem;
         font-weight: 600;
-        background-color: #D8F3DC;
-        padding: 8px 16px;
+        background-color: #D8F3DC !important;
+        padding: 8px 18px;
         border-radius: 12px;
         display: inline-block;
         margin-top: 10px;
     }
     .example-box {
-        background-color: #F0F7F4;
-        border-left: 4px solid #40916C;
-        padding: 15px;
+        background-color: #EBF5EE !important;
+        border-left: 5px solid #2D6A4F;
+        padding: 16px;
         border-radius: 10px;
         text-align: left;
         margin-top: 20px;
     }
     .example-en {
-        color: #1B4332;
-        font-size: 1.05rem;
-        font-weight: 500;
+        color: #1B4332 !important;
+        font-size: 1.1rem;
+        font-weight: 600;
         font-style: italic;
     }
     .example-tr {
-        color: #52796F;
+        color: #40916C !important;
         font-size: 0.95rem;
-        margin-top: 5px;
+        margin-top: 6px;
     }
 
     /* Buton Tasarımları (Orta-Koyu Yeşil Tonları) */
@@ -96,37 +104,56 @@ st.markdown("""
         width: 100%;
         box-shadow: 0 4px 6px rgba(45, 106, 79, 0.2) !important;
     }
+    div.stButton > button p {
+        color: #FFFFFF !important;
+    }
     div.stButton > button:hover {
         background-color: #1B4332 !important;
         transform: translateY(-2px);
         box-shadow: 0 6px 12px rgba(27, 67, 50, 0.3) !important;
     }
-    div.stButton > button:active {
-        transform: translateY(0px);
+    div.stButton > button:disabled {
+        background-color: #A3B18A !important;
+        opacity: 0.7;
     }
 
-    /* Radyo Butonları ve Sekme Düzenlemeleri */
+    /* Sekme (Alt Menü) Düzenlemeleri - Tüm Sekmeler Net Görünür */
     .stTabs [data-baseweb="tab-list"] {
-        gap: 10px;
+        gap: 8px;
         justify-content: center;
+        flex-wrap: wrap;
+        border-bottom: 2px solid #B7E4C7;
+        padding-bottom: 8px;
     }
     .stTabs [data-baseweb="tab"] {
-        background-color: #D8F3DC;
-        border-radius: 10px;
-        color: #1B4332;
-        font-weight: 600;
-        padding: 8px 16px;
+        background-color: #D8F3DC !important;
+        border-radius: 10px !important;
+        color: #1B4332 !important;
+        font-weight: 700 !important;
+        padding: 8px 16px !important;
+        border: 1px solid #95D5B2 !important;
+    }
+    .stTabs [data-baseweb="tab"] p {
+        color: #1B4332 !important;
+        font-weight: 700 !important;
     }
     .stTabs [aria-selected="true"] {
         background-color: #2D6A4F !important;
+        border-color: #1B4332 !important;
+    }
+    .stTabs [aria-selected="true"] p {
         color: #FFFFFF !important;
+    }
+    /* Aktif sekme altındaki kırmızı çizgiyi yeşile çevir */
+    .stTabs [data-baseweb="tab-highlight"] {
+        background-color: #1B4332 !important;
     }
 </style>
 """, unsafe_allow_html=True)
 
 DATA_FILE = "kelimeler.json"
 
-# Başlangıç Veritabanı (İlettiğin tüm B1 ve B2 kelimeleri + Öğretici Örnek Cümleler)
+# Başlangıç Veritabanı
 INITIAL_DATA = {
     "B1": [
         {"en": "Reckless", "tr": "pervasız, düşüncesizce riskli", "ex_en": "He was fined for reckless driving on the highway.", "ex_tr": "Otoyolda pervasızca araç kullanmaktan ceza yedi."},
@@ -266,7 +293,6 @@ INITIAL_DATA = {
     ]
 }
 
-# Veritabanı Yükleme ve Kaydetme Fonksiyonları
 def load_words():
     if not os.path.exists(DATA_FILE):
         with open(DATA_FILE, "w", encoding="utf-8") as f:
@@ -279,10 +305,8 @@ def save_words(data):
     with open(DATA_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=4)
 
-# Metinden Sese (Telaffuz) Fonksiyonu
 @st.cache_data(show_spinner=False)
 def generate_audio(text):
-    # Parantez içi açıklamaları (British/USA vb.) seslendirmeden temizle
     clean_text = text.split("(")[0].strip()
     tts = gTTS(text=clean_text, lang='en', slow=False)
     fp = BytesIO()
@@ -290,7 +314,6 @@ def generate_audio(text):
     fp.seek(0)
     return fp.read()
 
-# Session State Başlatma
 if "words_db" not in st.session_state:
     st.session_state.words_db = load_words()
 
@@ -312,7 +335,6 @@ if "quiz_total" not in st.session_state:
 if "quiz_question" not in st.session_state:
     st.session_state.quiz_question = None
 
-# Yeni Quiz Sorusu Oluşturma
 def create_quiz_question(level):
     word_list = st.session_state.words_db[level]
     target = random.choice(word_list)
@@ -330,7 +352,6 @@ def create_quiz_question(level):
 st.markdown('<div class="main-title">🌿 VocabMaster</div>', unsafe_allow_html=True)
 st.markdown('<div class="sub-title">B1 & B2 İnteraktif Kelime Pratiği</div>', unsafe_allow_html=True)
 
-# Seviye Seçimi (Üst Bar)
 col_lvl1, col_lvl2 = st.columns(2)
 with col_lvl1:
     if st.button("📘 B1 Seviyesi (" + str(len(st.session_state.words_db["B1"])) + " Kelime)"):
@@ -350,45 +371,31 @@ words = st.session_state.words_db[level]
 
 st.info(f"Şu an seçili kur: **{level} Seviyesi**")
 
-# Sekmeler (Çalışma Modları ve Kelime Ekleme)
 tab1, tab2, tab3, tab4 = st.tabs(["🗂️ Kelime Kartları", "🎯 Mini Quiz", "➕ Yeni Kelime Ekle", "📋 Tüm Liste"])
 
-# --- SEKME 1: KELİME KARTLARI (FLASHCARDS) ---
+# --- SEKME 1: KELİME KARTLARI ---
 with tab1:
     if len(words) > 0:
-        # İndeks sınır kontrolü
         if st.session_state.card_index >= len(words):
             st.session_state.card_index = 0
             
         current_word = words[st.session_state.card_index]
         
-        # İlerleme Çubuğu
         progress = (st.session_state.card_index + 1) / len(words)
         st.progress(progress)
         st.caption(f"Kart {st.session_state.card_index + 1} / {len(words)}")
 
-        # Kelime Kartı Gösterimi
-        meaning_html = f'<div class="word-tr">{current_word["tr"]}</div>' if st.session_state.show_meaning else '<div style="color:#888; margin-top:10px;">Anlamını görmek için aşağıdaki butona dokun 👇</div>'
+        meaning_html = f'<div class="word-tr">{current_word["tr"]}</div>' if st.session_state.show_meaning else '<div style="color:#52796F; font-weight:500; margin-top:10px;">Anlamını görmek için aşağıdaki butona dokun 👇</div>'
         
+        # DÜZELTME: HTML etiketleri girintisiz (tek satırda) birleştirildi, siyah kod kutusu engellendi
         example_html = ""
         if current_word.get("ex_en"):
             ex_tr_display = current_word.get("ex_tr", "") if st.session_state.show_meaning else "<i>(Türkçe çeviri gizli)</i>"
-            example_html = f"""
-            <div class="example-box">
-                <div class="example-en">"{current_word['ex_en']}"</div>
-                <div class="example-tr">{ex_tr_display}</div>
-            </div>
-            """
+            example_html = f'<div class="example-box"><div class="example-en">"{current_word["ex_en"]}"</div><div class="example-tr">{ex_tr_display}</div></div>'
 
-        st.markdown(f"""
-        <div class="word-card">
-            <div class="word-en">{current_word['en']}</div>
-            {meaning_html}
-            {example_html}
-        </div>
-        """, unsafe_allow_html=True)
+        card_html = f'<div class="word-card"><div class="word-en">{current_word["en"]}</div>{meaning_html}{example_html}</div>'
+        st.markdown(card_html, unsafe_allow_html=True)
 
-        # Telaffuz Dinleme Butonları
         col_audio1, col_audio2 = st.columns(2)
         with col_audio1:
             if st.button("🔊 Kelimeyi Dinle", key="listen_word"):
@@ -401,14 +408,12 @@ with tab1:
                     st.audio(audio_bytes, format="audio/mp3", autoplay=True)
 
         st.write("")
-        # Anlamı Göster / Gizle Butonu
         btn_label = "🙈 Anlamı Gizle" if st.session_state.show_meaning else "👀 Türkçesini Göster"
         if st.button(btn_label, key="toggle_meaning"):
             st.session_state.show_meaning = not st.session_state.show_meaning
             st.rerun()
 
         st.write("")
-        # İleri / Geri / Rastgele Gezinme Butonları
         c1, c2, c3 = st.columns(3)
         with c1:
             if st.button("⬅️ Önceki"):
@@ -426,7 +431,7 @@ with tab1:
                 st.session_state.show_meaning = False
                 st.rerun()
 
-# --- SEKME 2: MINI QUIZ (DUOLINGO TARZI ALIŞTIRMA) ---
+# --- SEKME 2: MINI QUIZ ---
 with tab2:
     st.markdown(f"### 🎯 {level} Seviyesi Hızlı Test")
     st.caption(f"Toplam Skor: **{st.session_state.quiz_score} Doğru** / {st.session_state.quiz_total} Soru")
@@ -437,12 +442,8 @@ with tab2:
     q = st.session_state.quiz_question
     q_word = q["word"]
     
-    st.markdown(f"""
-    <div class="word-card" style="padding: 20px;">
-        <div style="font-size: 0.9rem; color: #52796F;">Bu kelimenin Türkçe karşılığı nedir?</div>
-        <div class="word-en" style="font-size: 2rem;">{q_word['en']}</div>
-    </div>
-    """, unsafe_allow_html=True)
+    quiz_card_html = f'<div class="word-card" style="padding: 20px;"><div style="font-size: 0.95rem; color: #52796F; font-weight: 600;">Bu kelimenin Türkçe karşılığı nedir?</div><div class="word-en" style="font-size: 2rem;">{q_word["en"]}</div></div>'
+    st.markdown(quiz_card_html, unsafe_allow_html=True)
     
     if st.button("🔊 Telaffuzunu Dinle", key="quiz_audio"):
         st.audio(generate_audio(q_word["en"]), format="audio/mp3", autoplay=True)
@@ -485,7 +486,6 @@ with tab3:
         submitted = st.form_submit_button("💾 Kelimeyi Kaydet")
         if submitted:
             if new_en.strip() and new_tr.strip():
-                # Eğer örnek cümle boş bırakılırsa otomatik basit bir pratik cümlesi üretir
                 final_ex_en = new_ex_en.strip() if new_ex_en.strip() else f"We learned the word '{new_en.strip()}' in our English class today."
                 final_ex_tr = new_ex_tr.strip() if new_ex_tr.strip() else f"Bugün İngilizce dersimizde '{new_en.strip()}' kelimesini öğrendik."
                 
