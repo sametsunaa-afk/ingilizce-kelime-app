@@ -71,16 +71,6 @@ st.markdown("""
         margin-bottom: 12px;
         border: 1px solid #B7E4C7;
     }
-    .target-pill {
-        display: inline-block;
-        background-color: #2D6A4F;
-        color: #FFFFFF !important;
-        font-size: 0.85rem;
-        font-weight: 600;
-        padding: 4px 12px;
-        border-radius: 8px;
-        margin-bottom: 10px;
-    }
     .word-main {
         color: #1B4332 !important;
         font-size: 2rem;
@@ -92,7 +82,7 @@ st.markdown("""
         color: #1B4332 !important;
         font-size: 1.35rem;
         font-weight: 600;
-        margin: 12px 0;
+        margin: 14px 0;
         line-height: 1.45;
     }
     .word-answer {
@@ -148,7 +138,6 @@ st.markdown("""
         background-color: #A3B18A !important;
         opacity: 0.75;
     }
-    /* Text Input Kutusu */
     .stTextInput input, .stTextArea textarea {
         background-color: #FFFFFF !important;
         color: #1B4332 !important;
@@ -350,11 +339,30 @@ def generate_audio(text):
     fp.seek(0)
     return fp.read()
 
-# --- YAPAY ZEKA FONKSİYONLARI ---
+# --- YAPAY ZEKA YARDIMCI ÇAĞRI FONKSİYONU ---
+def call_gemini_json(prompt, schema, temperature=0.5):
+    models_to_try = ["gemini-3.8-flash", "gemini-3-flash-preview", "gemini-2.5-flash-lite"]
+    last_error = None
+    for model_name in models_to_try:
+        try:
+            response = client.models.generate_content(
+                model=model_name,
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json",
+                    response_schema=schema,
+                    temperature=temperature
+                )
+            )
+            return json.loads(response.text)
+        except Exception as e:
+            last_error = e
+            continue
+    raise last_error
+
 def ai_generate_sentence(word_obj, level, direction):
-    """Seçilen kelimeyi içeren yeni bir İngilizce veya Türkçe cümle üretir."""
+    """Seçilen gizli kelimeyi içeren yeni bir İngilizce veya Türkçe cümle üretir."""
     if not client:
-        # API anahtarı yoksa mevcut örnek cümleyi kullan
         return {
             "source_sentence": word_obj["ex_en"] if direction == "SENT_EN_TO_TR" else word_obj["ex_tr"],
             "reference_translation": word_obj["ex_tr"] if direction == "SENT_EN_TO_TR" else word_obj["ex_en"]
@@ -367,27 +375,19 @@ def ai_generate_sentence(word_obj, level, direction):
     
     Bu hedef kelimeyi/kalıbı doğal ve öğretici bir bağlamda içeren, {level} seviyesine uygun YENİ ve kısa/orta uzunlukta tek bir cümle oluştur.
     Eğer yön "SENT_EN_TO_TR" ise source_sentence İngilizce, reference_translation Türkçe olsun.
-    Eğer yön "SENT_TR_TO_EN" ise source_sentence Türkçe, reference_translation ise hedef İngilizce kelimeyi ("{clean_en}") doğru formda içeren İngilizce cümle olsun.
+    Eğer yön "SENT_TR_TO_EN" ise source_sentence Türkçe (içinde hedef kelimenin Türkçe anlamı doğal olarak geçsin), reference_translation ise hedef İngilizce kelimeyi ("{clean_en}") doğru formda içeren İngilizce cümle olsun.
     İstenen yön: {direction}
     """
+    schema = {
+        "type": "OBJECT",
+        "properties": {
+            "source_sentence": {"type": "STRING"},
+            "reference_translation": {"type": "STRING"}
+        },
+        "required": ["source_sentence", "reference_translation"]
+    }
     try:
-        response = client.models.generate_content(
-            model='gemini-2.5-flash',
-            contents=prompt,
-            config=types.GenerateContentConfig(
-                response_mime_type="application/json",
-                response_schema={
-                    "type": "OBJECT",
-                    "properties": {
-                        "source_sentence": {"type": "STRING"},
-                        "reference_translation": {"type": "STRING"}
-                    },
-                    "required": ["source_sentence", "reference_translation"]
-                },
-                temperature=0.8
-            )
-        )
-        return json.loads(response.text)
+        return call_gemini_json(prompt, schema, temperature=0.8)
     except Exception:
         return {
             "source_sentence": word_obj["ex_en"] if direction == "SENT_EN_TO_TR" else word_obj["ex_tr"],
@@ -406,49 +406,52 @@ def ai_evaluate_translation(source_sentence, user_answer, target_word_obj, direc
 
     clean_en = target_word_obj["en"].split("(")[0].strip()
     if direction == "SENT_TR_TO_EN":
-        criteria_note = f"Kullanıcı Türkçe cümleyi İngilizceye çevirdi. EN ÖNEMLİ KRİTERLER: 1) Hedef kelime/kalıp olan '{clean_en}' (veya cümleye uygun çekimli hali) mutlaka kullanılmış ve HARFİ HARFİNE DOĞRU YAZILMIŞ (spelling hatasız) olmalı. 2) İngilizce cümle gramer ve sözdizimi açısından kurallı ve anlamlı olmalı."
+        criteria_note = f"""
+        Kullanıcı Türkçe cümleyi İngilizceye çevirdi. 
+        Arka planda test edilen hedef kelime/kalıp: '{clean_en}' (Türkçesi: '{target_word_obj['tr']}').
+        EN ÖNEMLİ KRİTERLER:
+        1) Hedef kelime/kalıp olan '{clean_en}' (veya cümle zamanına/gramerine uygun çekimli hali) cümlede kullanılmış ve HARFİ HARFİNE DOĞRU YAZILMIŞ (spelling hatasız) olmalı. Eğer eş anlamlı başka bir kelime yazdıysa hedef kelimeyi kullanmadığını nazikçe belirt ve puan kır.
+        2) İngilizce cümle dilbilgisi (gramer, edatlar, zamanlar, kelime dizilimi) açısından kurallı ve anlamlı olmalı.
+        """
     else:
-        criteria_note = f"Kullanıcı İngilizce cümleyi Türkçeye çevirdi. EN ÖNEMLİ KRİTERLER: 1) Hedef kelime olan '{clean_en}' kelimesinin Türkçe anlamı ('{target_word_obj['tr']}') doğru yansıtılmış olmalı. 2) Türkçe cümle anlamlı ve kurallı olmalı."
+        criteria_note = f"""
+        Kullanıcı İngilizce cümleyi Türkçeye çevirdi.
+        Arka planda test edilen hedef kelime/kalıp: '{clean_en}' (Türkçesi: '{target_word_obj['tr']}').
+        EN ÖNEMLİ KRİTERLER:
+        1) Hedef kelime olan '{clean_en}' kelimesinin Türkçe anlamı ('{target_word_obj['tr']}') çeviride doğru verilmiş olmalı.
+        2) Türkçe cümle anlamlı, doğal ve kurallı olmalı.
+        """
 
     prompt = f"""
     Sen titiz ama teşvik edici bir İngilizce öğretmenisin. Öğrencinin çevirisini değerlendir.
     
     Kaynak Cümle: "{source_sentence}"
-    Hedef Kelime: "{clean_en}" ({target_word_obj['tr']})
     Öğrencinin Cevabı: "{user_answer}"
     
     Değerlendirme Kuralları:
     {criteria_note}
-    - Küçük noktalama eksikliklerini tolere et ama hedef kelimedeki harf hatalarını (spelling) ve belirgin gramer hatalarını mutlaka yakala ve puan kır.
+    - Küçük noktalama eksikliklerini veya büyük/küçük harf farklarını tolere et ama hedef kelimedeki harf hatalarını (spelling) ve gramer hatalarını mutlaka yakala ve puan kır.
     - Puanı 100 üzerinden ver. 75 ve üzeri ise is_correct = true olsun.
-    - Geri bildirimi (feedback) Türkçe, kısa, net ve öğretici yaz (varsa kelimenin doğru yazılışını ve gramer düzeltmesini göster).
+    - Geri bildirimi (feedback) Türkçe, kısa, net ve öğretici yaz (hedef kelimenin ne olduğunu da geri bildirimde belirterek doğru kullanımını göster).
     """
+    schema = {
+        "type": "OBJECT",
+        "properties": {
+            "is_correct": {"type": "BOOLEAN"},
+            "score": {"type": "INTEGER"},
+            "feedback": {"type": "STRING"},
+            "ideal_answer": {"type": "STRING"}
+        },
+        "required": ["is_correct", "score", "feedback", "ideal_answer"]
+    }
     try:
-        response = client.models.generate_content(
-            model='gemini-2.5-flash',
-            contents=prompt,
-            config=types.GenerateContentConfig(
-                response_mime_type="application/json",
-                response_schema={
-                    "type": "OBJECT",
-                    "properties": {
-                        "is_correct": {"type": "BOOLEAN"},
-                        "score": {"type": "INTEGER"},
-                        "feedback": {"type": "STRING"},
-                        "ideal_answer": {"type": "STRING"}
-                    },
-                    "required": ["is_correct", "score", "feedback", "ideal_answer"]
-                },
-                temperature=0.2
-            )
-        )
-        return json.loads(response.text)
+        return call_gemini_json(prompt, schema, temperature=0.2)
     except Exception as e:
         return {
             "is_correct": False,
             "score": 0,
-            "feedback": f"Bağlantı hatası oluştu: {str(e)}",
-            "ideal_answer": ""
+            "feedback": f"Yapay zeka servisine şu an ulaşılamıyor. Lütfen birkaç saniye sonra tekrar deneyin. (Detay: {str(e)})",
+            "ideal_answer": target_word_obj["ex_en"] if direction == "SENT_TR_TO_EN" else target_word_obj["ex_tr"]
         }
 
 # --- SESSION STATE YÖNETİMİ ---
@@ -565,7 +568,6 @@ with tab1:
         current_word = words[st.session_state.card_index]
         mode = st.session_state.card_mode
         
-        # Eğer sayfa ilk açıldığında mod cümle moduna denk geldiyse cümleyi üret
         if mode in ["SENT_EN_TO_TR", "SENT_TR_TO_EN"] and st.session_state.card_ai_sentence is None:
             with st.spinner("🤖 Yapay zeka cümle hazırlıyor..."):
                 st.session_state.card_ai_sentence = ai_generate_sentence(current_word, level, mode)
@@ -574,7 +576,7 @@ with tab1:
         st.progress(progress)
         st.caption(f"Kart {st.session_state.card_index + 1} / {len(words)}")
 
-        # --- DURUM A: KLASİK KELİME KARTI (EN->TR veya TR->EN) ---
+        # --- DURUM A: KLASİK KELİME KARTI ---
         if mode in ["EN_TO_TR", "TR_TO_EN"]:
             if mode == "EN_TO_TR":
                 badge_text = "🇬🇧 İngilizce ➔ 🇹🇷 Türkçe (Kelime)"
@@ -617,19 +619,17 @@ with tab1:
                 st.session_state.show_meaning = not st.session_state.show_meaning
                 st.rerun()
 
-        # --- DURUM B: YAPAY ZEKA CÜMLE ÇEVİRİSİ KARTI ---
+        # --- DURUM B: YAPAY ZEKA CÜMLE ÇEVİRİSİ KARTI (HEDEF KELİME GİZLİ) ---
         else:
             sent_data = st.session_state.card_ai_sentence
             if mode == "SENT_EN_TO_TR":
                 badge_text = "✍️ Cümle Çevirisi: 🇬🇧 İngilizce ➔ 🇹🇷 Türkçe"
-                target_info = f"Hedef Kelime: {current_word['en']}"
                 instruction = "Aşağıdaki İngilizce cümleyi kurallı bir şekilde Türkçeye çevir:"
             else:
                 badge_text = "✍️ Cümle Çevirisi: 🇹🇷 Türkçe ➔ 🇬🇧 İngilizce"
-                target_info = f"Kullanılacak Kelime: {current_word['en']} ({current_word['tr']})"
-                instruction = f"Aşağıdaki cümleyi '{current_word['en']}' kelimesini doğru yazarak İngilizceye çevir:"
+                instruction = "Aşağıdaki Türkçe cümleyi kurallı bir şekilde İngilizceye çevir:"
 
-            card_html = f'<div class="word-card"><div class="lang-badge">{badge_text}</div><br><div class="target-pill">{target_info}</div><div style="font-size:0.9rem; color:#52796F; margin-top:4px;">{instruction}</div><div class="sentence-main">"{sent_data["source_sentence"]}"</div></div>'
+            card_html = f'<div class="word-card"><div class="lang-badge">{badge_text}</div><div style="font-size:0.95rem; color:#52796F; font-weight:600; margin-top:4px;">{instruction}</div><div class="sentence-main">"{sent_data["source_sentence"]}"</div></div>'
             st.markdown(card_html, unsafe_allow_html=True)
 
             if mode == "SENT_EN_TO_TR":
@@ -658,7 +658,7 @@ with tab1:
                     st.error(f"❌ **Geliştirilmeli (Puan: {ev['score']}/100)**\n\n{ev['feedback']}")
                 
                 if ev.get("ideal_answer"):
-                    st.info(f"💡 **Örnek Doğru Çeviri:** {ev['ideal_answer']}")
+                    st.info(f"💡 **Örnek Doğru Çeviri:** {ev['ideal_answer']}\n\n🎯 **Test Edilen Kelime:** {current_word['en']} ({current_word['tr']})")
                     if mode == "SENT_TR_TO_EN":
                         if st.button("🔊 Doğru İngilizce Cümleyi Dinle", key="listen_ideal_card"):
                             st.audio(generate_audio(ev["ideal_answer"]), format="audio/mp3", autoplay=True)
@@ -731,19 +731,17 @@ with tab2:
                 st.session_state.quiz_question = create_quiz_question(level)
                 st.rerun()
 
-    # --- QUIZ DURUM B: YAPAY ZEKA YAZMA / CÜMLE ÇEVİRİSİ ---
+    # --- QUIZ DURUM B: YAPAY ZEKA YAZMA / CÜMLE ÇEVİRİSİ (HEDEF KELİME GİZLİ) ---
     else:
         sent_data = q["sent_data"]
         if q_type == "SENT_EN_TO_TR":
             q_badge = "✍️ Yazma Sorusu: 🇬🇧 İngilizce ➔ 🇹🇷 Türkçe"
-            target_info = f"Hedef Kelime: {q_word['en']}"
-            q_prompt = "Bu İngilizce cümleyi Türkçeye çevir:"
+            q_prompt = "Bu İngilizce cümleyi kurallı bir şekilde Türkçeye çevir:"
         else:
             q_badge = "✍️ Yazma Sorusu: 🇹🇷 Türkçe ➔ 🇬🇧 İngilizce"
-            target_info = f"Kullanılacak Kelime: {q_word['en']} ({q_word['tr']})"
-            q_prompt = f"Bu cümleyi '{q_word['en']}' kelimesini doğru yazarak İngilizceye çevir:"
+            q_prompt = "Bu Türkçe cümleyi kurallı bir şekilde İngilizceye çevir:"
 
-        quiz_card_html = f'<div class="word-card" style="padding: 20px;"><div class="lang-badge">{q_badge}</div><br><div class="target-pill">{target_info}</div><div style="font-size: 0.9rem; color: #52796F; margin-top:4px;">{q_prompt}</div><div class="sentence-main">"{sent_data["source_sentence"]}"</div></div>'
+        quiz_card_html = f'<div class="word-card" style="padding: 20px;"><div class="lang-badge">{q_badge}</div><div style="font-size: 0.95rem; color: #52796F; font-weight: 600; margin-top:4px;">{q_prompt}</div><div class="sentence-main">"{sent_data["source_sentence"]}"</div></div>'
         st.markdown(quiz_card_html, unsafe_allow_html=True)
 
         if q_type == "SENT_EN_TO_TR":
@@ -779,7 +777,7 @@ with tab2:
                 st.error(f"❌ **Hatalı veya Eksik Çeviri ({ev['score']}/100)**\n\n{ev['feedback']}")
             
             if ev.get("ideal_answer"):
-                st.info(f"💡 **Örnek Doğru Çeviri:** {ev['ideal_answer']}")
+                st.info(f"💡 **Örnek Doğru Çeviri:** {ev['ideal_answer']}\n\n🎯 **Test Edilen Kelime:** {q_word['en']} ({q_word['tr']})")
                 if q_type == "SENT_TR_TO_EN":
                     if st.button("🔊 Doğru İngilizce Cümleyi Dinle", key="listen_ideal_quiz"):
                         st.audio(generate_audio(ev["ideal_answer"]), format="audio/mp3", autoplay=True)
