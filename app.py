@@ -4,26 +4,35 @@ import os
 import random
 from io import BytesIO
 from gtts import gTTS
+from google import genai
+from google.genai import types
 
 # Sayfa Ayarları
 st.set_page_config(
-    page_title="VocabMaster | B1 & B2",
+    page_title="VocabMaster | B1 & B2 AI",
     page_icon="🌿",
     layout="centered",
     initial_sidebar_state="collapsed"
 )
 
-# Özel CSS Tasarımı (Karanlık Mod Uyumlu, Net Kontrastlı Yeşil Tema)
+# Gemini API İstemcisi Başlatma
+@st.cache_resource
+def get_ai_client():
+    api_key = st.secrets.get("GEMINI_API_KEY", os.environ.get("GEMINI_API_KEY", ""))
+    if api_key:
+        return genai.Client(api_key=api_key)
+    return None
+
+client = get_ai_client()
+
+# Özel CSS Tasarımı
 st.markdown("""
 <style>
-    /* Genel Arka Plan ve Yazı Tipi */
     .stApp {
         background-color: #F4F7F5 !important;
         color: #1B4332 !important;
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
-    
-    /* Ana Başlık */
     .main-title {
         color: #1B4332 !important;
         text-align: center;
@@ -38,18 +47,14 @@ st.markdown("""
         font-weight: 500;
         margin-bottom: 1.5rem;
     }
-
-    /* Genel Metin ve Etiket Renkleri */
     p, label, .stCaption, div[data-testid="stCaptionContainer"] {
         color: #2D6A4F !important;
         font-weight: 500;
     }
-
-    /* Kelime Kartı Tasarımı */
     .word-card {
         background-color: #FFFFFF !important;
         border-radius: 20px;
-        padding: 30px 25px;
+        padding: 28px 22px;
         box-shadow: 0 8px 24px rgba(27, 67, 50, 0.1);
         border-top: 6px solid #2D6A4F;
         text-align: center;
@@ -59,23 +64,40 @@ st.markdown("""
         display: inline-block;
         background-color: #EBF5EE;
         color: #2D6A4F !important;
-        font-size: 0.8rem;
+        font-size: 0.82rem;
         font-weight: 700;
-        padding: 4px 12px;
+        padding: 4px 14px;
         border-radius: 20px;
         margin-bottom: 12px;
         border: 1px solid #B7E4C7;
     }
+    .target-pill {
+        display: inline-block;
+        background-color: #2D6A4F;
+        color: #FFFFFF !important;
+        font-size: 0.85rem;
+        font-weight: 600;
+        padding: 4px 12px;
+        border-radius: 8px;
+        margin-bottom: 10px;
+    }
     .word-main {
         color: #1B4332 !important;
-        font-size: 2.1rem;
+        font-size: 2rem;
         font-weight: 700;
         margin-bottom: 10px;
         line-height: 1.3;
     }
+    .sentence-main {
+        color: #1B4332 !important;
+        font-size: 1.35rem;
+        font-weight: 600;
+        margin: 12px 0;
+        line-height: 1.45;
+    }
     .word-answer {
         color: #1B4332 !important;
-        font-size: 1.4rem;
+        font-size: 1.35rem;
         font-weight: 700;
         background-color: #D8F3DC !important;
         padding: 10px 20px;
@@ -93,7 +115,7 @@ st.markdown("""
     }
     .example-en {
         color: #1B4332 !important;
-        font-size: 1.1rem;
+        font-size: 1.05rem;
         font-weight: 600;
         font-style: italic;
     }
@@ -102,8 +124,6 @@ st.markdown("""
         font-size: 0.95rem;
         margin-top: 6px;
     }
-
-    /* Buton Tasarımları (Orta-Koyu Yeşil Tonları) */
     div.stButton > button {
         background-color: #2D6A4F !important;
         color: #FFFFFF !important;
@@ -128,8 +148,14 @@ st.markdown("""
         background-color: #A3B18A !important;
         opacity: 0.75;
     }
-
-    /* Sekme (Alt Menü) Düzenlemeleri */
+    /* Text Input Kutusu */
+    .stTextInput input, .stTextArea textarea {
+        background-color: #FFFFFF !important;
+        color: #1B4332 !important;
+        border: 2px solid #74C69D !important;
+        border-radius: 12px !important;
+        font-size: 1.05rem !important;
+    }
     .stTabs [data-baseweb="tab-list"] {
         gap: 8px;
         justify-content: center;
@@ -164,7 +190,6 @@ st.markdown("""
 
 DATA_FILE = "kelimeler.json"
 
-# Başlangıç Veritabanı
 INITIAL_DATA = {
     "B1": [
         {"en": "Reckless", "tr": "pervasız, düşüncesizce riskli", "ex_en": "He was fined for reckless driving on the highway.", "ex_tr": "Otoyolda pervasızca araç kullanmaktan ceza yedi."},
@@ -325,7 +350,108 @@ def generate_audio(text):
     fp.seek(0)
     return fp.read()
 
-# Session State Başlatma
+# --- YAPAY ZEKA FONKSİYONLARI ---
+def ai_generate_sentence(word_obj, level, direction):
+    """Seçilen kelimeyi içeren yeni bir İngilizce veya Türkçe cümle üretir."""
+    if not client:
+        # API anahtarı yoksa mevcut örnek cümleyi kullan
+        return {
+            "source_sentence": word_obj["ex_en"] if direction == "SENT_EN_TO_TR" else word_obj["ex_tr"],
+            "reference_translation": word_obj["ex_tr"] if direction == "SENT_EN_TO_TR" else word_obj["ex_en"]
+        }
+    
+    clean_en = word_obj["en"].split("(")[0].strip()
+    prompt = f"""
+    Sen bir İngilizce öğretmenisin. Öğrencinin seviyesi: {level}.
+    Hedef İngilizce kelime/kalıp: "{clean_en}" (Türkçe anlamı: "{word_obj['tr']}").
+    
+    Bu hedef kelimeyi/kalıbı doğal ve öğretici bir bağlamda içeren, {level} seviyesine uygun YENİ ve kısa/orta uzunlukta tek bir cümle oluştur.
+    Eğer yön "SENT_EN_TO_TR" ise source_sentence İngilizce, reference_translation Türkçe olsun.
+    Eğer yön "SENT_TR_TO_EN" ise source_sentence Türkçe, reference_translation ise hedef İngilizce kelimeyi ("{clean_en}") doğru formda içeren İngilizce cümle olsun.
+    İstenen yön: {direction}
+    """
+    try:
+        response = client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                response_mime_type="application/json",
+                response_schema={
+                    "type": "OBJECT",
+                    "properties": {
+                        "source_sentence": {"type": "STRING"},
+                        "reference_translation": {"type": "STRING"}
+                    },
+                    "required": ["source_sentence", "reference_translation"]
+                },
+                temperature=0.8
+            )
+        )
+        return json.loads(response.text)
+    except Exception:
+        return {
+            "source_sentence": word_obj["ex_en"] if direction == "SENT_EN_TO_TR" else word_obj["ex_tr"],
+            "reference_translation": word_obj["ex_tr"] if direction == "SENT_EN_TO_TR" else word_obj["ex_en"]
+        }
+
+def ai_evaluate_translation(source_sentence, user_answer, target_word_obj, direction):
+    """Kullanıcının yazdığı cümleyi yazım (spelling) ve dilbilgisi kurallarına göre değerlendirir."""
+    if not client:
+        return {
+            "is_correct": False,
+            "score": 0,
+            "feedback": "⚠️ Yapay zeka kontrolü için Streamlit Secrets ayarlarına GEMINI_API_KEY eklenmelidir.",
+            "ideal_answer": target_word_obj["ex_en"] if direction == "SENT_TR_TO_EN" else target_word_obj["ex_tr"]
+        }
+
+    clean_en = target_word_obj["en"].split("(")[0].strip()
+    if direction == "SENT_TR_TO_EN":
+        criteria_note = f"Kullanıcı Türkçe cümleyi İngilizceye çevirdi. EN ÖNEMLİ KRİTERLER: 1) Hedef kelime/kalıp olan '{clean_en}' (veya cümleye uygun çekimli hali) mutlaka kullanılmış ve HARFİ HARFİNE DOĞRU YAZILMIŞ (spelling hatasız) olmalı. 2) İngilizce cümle gramer ve sözdizimi açısından kurallı ve anlamlı olmalı."
+    else:
+        criteria_note = f"Kullanıcı İngilizce cümleyi Türkçeye çevirdi. EN ÖNEMLİ KRİTERLER: 1) Hedef kelime olan '{clean_en}' kelimesinin Türkçe anlamı ('{target_word_obj['tr']}') doğru yansıtılmış olmalı. 2) Türkçe cümle anlamlı ve kurallı olmalı."
+
+    prompt = f"""
+    Sen titiz ama teşvik edici bir İngilizce öğretmenisin. Öğrencinin çevirisini değerlendir.
+    
+    Kaynak Cümle: "{source_sentence}"
+    Hedef Kelime: "{clean_en}" ({target_word_obj['tr']})
+    Öğrencinin Cevabı: "{user_answer}"
+    
+    Değerlendirme Kuralları:
+    {criteria_note}
+    - Küçük noktalama eksikliklerini tolere et ama hedef kelimedeki harf hatalarını (spelling) ve belirgin gramer hatalarını mutlaka yakala ve puan kır.
+    - Puanı 100 üzerinden ver. 75 ve üzeri ise is_correct = true olsun.
+    - Geri bildirimi (feedback) Türkçe, kısa, net ve öğretici yaz (varsa kelimenin doğru yazılışını ve gramer düzeltmesini göster).
+    """
+    try:
+        response = client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                response_mime_type="application/json",
+                response_schema={
+                    "type": "OBJECT",
+                    "properties": {
+                        "is_correct": {"type": "BOOLEAN"},
+                        "score": {"type": "INTEGER"},
+                        "feedback": {"type": "STRING"},
+                        "ideal_answer": {"type": "STRING"}
+                    },
+                    "required": ["is_correct", "score", "feedback", "ideal_answer"]
+                },
+                temperature=0.2
+            )
+        )
+        return json.loads(response.text)
+    except Exception as e:
+        return {
+            "is_correct": False,
+            "score": 0,
+            "feedback": f"Bağlantı hatası oluştu: {str(e)}",
+            "ideal_answer": ""
+        }
+
+# --- SESSION STATE YÖNETİMİ ---
 if "words_db" not in st.session_state:
     st.session_state.words_db = load_words()
 
@@ -335,8 +461,14 @@ if "current_level" not in st.session_state:
 if "card_index" not in st.session_state:
     st.session_state.card_index = 0
 
-if "card_dir" not in st.session_state:
-    st.session_state.card_dir = random.choice(["EN_TO_TR", "TR_TO_EN"])
+if "card_mode" not in st.session_state:
+    st.session_state.card_mode = random.choice(["EN_TO_TR", "TR_TO_EN", "SENT_EN_TO_TR", "SENT_TR_TO_EN"])
+
+if "card_ai_sentence" not in st.session_state:
+    st.session_state.card_ai_sentence = None
+
+if "card_ai_eval" not in st.session_state:
+    st.session_state.card_ai_eval = None
 
 if "show_meaning" not in st.session_state:
     st.session_state.show_meaning = False
@@ -350,49 +482,72 @@ if "quiz_total" not in st.session_state:
 if "quiz_question" not in st.session_state:
     st.session_state.quiz_question = None
 
-# Yeni Quiz Sorusu Oluşturma (Rastgele EN->TR veya TR->EN)
+def reset_card_state(new_index, level):
+    st.session_state.card_index = new_index
+    st.session_state.show_meaning = False
+    st.session_state.card_ai_eval = None
+    mode = random.choice(["EN_TO_TR", "TR_TO_EN", "SENT_EN_TO_TR", "SENT_TR_TO_EN"])
+    st.session_state.card_mode = mode
+    if mode in ["SENT_EN_TO_TR", "SENT_TR_TO_EN"]:
+        word_obj = st.session_state.words_db[level][new_index]
+        with st.spinner("🤖 Yapay zeka cümle hazırlıyor..."):
+            st.session_state.card_ai_sentence = ai_generate_sentence(word_obj, level, mode)
+    else:
+        st.session_state.card_ai_sentence = None
+
 def create_quiz_question(level):
     word_list = st.session_state.words_db[level]
     target = random.choice(word_list)
-    direction = random.choice(["EN_TO_TR", "TR_TO_EN"])
+    q_type = random.choice(["EN_TO_TR", "TR_TO_EN", "SENT_EN_TO_TR", "SENT_TR_TO_EN"])
     
-    if direction == "EN_TO_TR":
-        wrong_choices = random.sample([w["tr"] for w in word_list if w["en"] != target["en"]], 3)
-        correct_answer = target["tr"]
+    if q_type in ["EN_TO_TR", "TR_TO_EN"]:
+        if q_type == "EN_TO_TR":
+            wrong_choices = random.sample([w["tr"] for w in word_list if w["en"] != target["en"]], 3)
+            correct_answer = target["tr"]
+        else:
+            wrong_choices = random.sample([w["en"] for w in word_list if w["tr"] != target["tr"]], 3)
+            correct_answer = target["en"]
+        options = wrong_choices + [correct_answer]
+        random.shuffle(options)
+        return {
+            "word": target,
+            "q_type": q_type,
+            "correct_answer": correct_answer,
+            "options": options,
+            "answered": False,
+            "selected": None
+        }
     else:
-        wrong_choices = random.sample([w["en"] for w in word_list if w["tr"] != target["tr"]], 3)
-        correct_answer = target["en"]
-        
-    options = wrong_choices + [correct_answer]
-    random.shuffle(options)
-    return {
-        "word": target,
-        "direction": direction,
-        "correct_answer": correct_answer,
-        "options": options,
-        "answered": False,
-        "selected": None
-    }
+        with st.spinner("🤖 Yapay zeka cümle sorusu hazırlıyor..."):
+            sent_data = ai_generate_sentence(target, level, q_type)
+        return {
+            "word": target,
+            "q_type": q_type,
+            "sent_data": sent_data,
+            "answered": False,
+            "ai_eval": None
+        }
 
 # --- ARAYÜZ BAŞLANGICI ---
-st.markdown('<div class="main-title">🌿 VocabMaster</div>', unsafe_allow_html=True)
-st.markdown('<div class="sub-title">B1 & B2 İnteraktif Kelime Pratiği</div>', unsafe_allow_html=True)
+st.markdown('<div class="main-title">🌿 VocabMaster AI</div>', unsafe_allow_html=True)
+st.markdown('<div class="sub-title">B1 & B2 İnteraktif Kelime ve Cümle Pratiği</div>', unsafe_allow_html=True)
+
+if not client:
+    st.warning("⚠️ **Yapay Zeka Aktif Değil:** Cümle oluşturma ve değerlendirme özelliğinin çalışması için Streamlit Secrets ayarlarına `GEMINI_API_KEY` eklemelisiniz.")
 
 col_lvl1, col_lvl2 = st.columns(2)
 with col_lvl1:
     if st.button("📘 B1 Seviyesi (" + str(len(st.session_state.words_db["B1"])) + " Kelime)"):
         st.session_state.current_level = "B1"
-        st.session_state.card_index = 0
-        st.session_state.card_dir = random.choice(["EN_TO_TR", "TR_TO_EN"])
-        st.session_state.show_meaning = False
+        reset_card_state(0, "B1")
         st.session_state.quiz_question = create_quiz_question("B1")
+        st.rerun()
 with col_lvl2:
     if st.button("📗 B2 Seviyesi (" + str(len(st.session_state.words_db["B2"])) + " Kelime)"):
         st.session_state.current_level = "B2"
-        st.session_state.card_index = 0
-        st.session_state.card_dir = random.choice(["EN_TO_TR", "TR_TO_EN"])
-        st.session_state.show_meaning = False
+        reset_card_state(0, "B2")
         st.session_state.quiz_question = create_quiz_question("B2")
+        st.rerun()
 
 level = st.session_state.current_level
 words = st.session_state.words_db[level]
@@ -401,87 +556,129 @@ st.info(f"Şu an seçili kur: **{level} Seviyesi**")
 
 tab1, tab2, tab3, tab4 = st.tabs(["🗂️ Kelime Kartları", "🎯 Mini Quiz", "➕ Yeni Kelime Ekle", "📋 Tüm Liste"])
 
-# --- SEKME 1: KELİME KARTLARI (ÇİFT YÖNLÜ) ---
+# --- SEKME 1: KELİME KARTLARI ---
 with tab1:
     if len(words) > 0:
         if st.session_state.card_index >= len(words):
             st.session_state.card_index = 0
             
         current_word = words[st.session_state.card_index]
-        direction = st.session_state.card_dir
+        mode = st.session_state.card_mode
+        
+        # Eğer sayfa ilk açıldığında mod cümle moduna denk geldiyse cümleyi üret
+        if mode in ["SENT_EN_TO_TR", "SENT_TR_TO_EN"] and st.session_state.card_ai_sentence is None:
+            with st.spinner("🤖 Yapay zeka cümle hazırlıyor..."):
+                st.session_state.card_ai_sentence = ai_generate_sentence(current_word, level, mode)
         
         progress = (st.session_state.card_index + 1) / len(words)
         st.progress(progress)
         st.caption(f"Kart {st.session_state.card_index + 1} / {len(words)}")
 
-        # Yöne göre kart içeriğini oluştur
-        if direction == "EN_TO_TR":
-            badge_text = "🇬🇧 İngilizce ➔ 🇹🇷 Türkçe"
-            question_text = current_word["en"]
-            answer_text = current_word["tr"]
-            hint_text = "Türkçe anlamını görmek için aşağıdaki butona dokun 👇"
-        else:
-            badge_text = "🇹🇷 Türkçe ➔ 🇬🇧 İngilizce"
-            question_text = current_word["tr"]
-            answer_text = current_word["en"]
-            hint_text = "İngilizce karşılığını görmek için aşağıdaki butona dokun 👇"
-
-        answer_html = f'<div class="word-answer">{answer_text}</div>' if st.session_state.show_meaning else f'<div style="color:#52796F; font-weight:500; margin-top:10px;">{hint_text}</div>'
-        
-        # Örnek cümle gösterimi (Türkçe->İngilizce modunda cevap açılana kadar İngilizce cümle gizlenir ki kopya olmasın)
-        example_html = ""
-        if current_word.get("ex_en"):
-            if direction == "EN_TO_TR":
-                ex_tr_display = current_word.get("ex_tr", "") if st.session_state.show_meaning else "<i>(Türkçe çeviri gizli)</i>"
-                example_html = f'<div class="example-box"><div class="example-en">"{current_word["ex_en"]}"</div><div class="example-tr">{ex_tr_display}</div></div>'
+        # --- DURUM A: KLASİK KELİME KARTI (EN->TR veya TR->EN) ---
+        if mode in ["EN_TO_TR", "TR_TO_EN"]:
+            if mode == "EN_TO_TR":
+                badge_text = "🇬🇧 İngilizce ➔ 🇹🇷 Türkçe (Kelime)"
+                question_text = current_word["en"]
+                answer_text = current_word["tr"]
+                hint_text = "Türkçe anlamını görmek için aşağıdaki butona dokun 👇"
             else:
-                if st.session_state.show_meaning:
-                    example_html = f'<div class="example-box"><div class="example-en">"{current_word["ex_en"]}"</div><div class="example-tr">{current_word.get("ex_tr", "")}</div></div>'
+                badge_text = "🇹🇷 Türkçe ➔ 🇬🇧 İngilizce (Kelime)"
+                question_text = current_word["tr"]
+                answer_text = current_word["en"]
+                hint_text = "İngilizce karşılığını görmek için aşağıdaki butona dokun 👇"
 
-        card_html = f'<div class="word-card"><div class="lang-badge">{badge_text}</div><div class="word-main">{question_text}</div>{answer_html}{example_html}</div>'
-        st.markdown(card_html, unsafe_allow_html=True)
+            answer_html = f'<div class="word-answer">{answer_text}</div>' if st.session_state.show_meaning else f'<div style="color:#52796F; font-weight:500; margin-top:10px;">{hint_text}</div>'
+            
+            example_html = ""
+            if current_word.get("ex_en"):
+                if mode == "EN_TO_TR":
+                    ex_tr_display = current_word.get("ex_tr", "") if st.session_state.show_meaning else "<i>(Türkçe çeviri gizli)</i>"
+                    example_html = f'<div class="example-box"><div class="example-en">"{current_word["ex_en"]}"</div><div class="example-tr">{ex_tr_display}</div></div>'
+                else:
+                    if st.session_state.show_meaning:
+                        example_html = f'<div class="example-box"><div class="example-en">"{current_word["ex_en"]}"</div><div class="example-tr">{current_word.get("ex_tr", "")}</div></div>'
 
-        # Telaffuz Dinleme Butonları (TR->EN modunda cevap açıldıktan sonra görünür)
-        if direction == "EN_TO_TR" or st.session_state.show_meaning:
-            col_audio1, col_audio2 = st.columns(2)
-            with col_audio1:
-                if st.button("🔊 Kelimeyi Dinle", key="listen_word"):
-                    audio_bytes = generate_audio(current_word["en"])
-                    st.audio(audio_bytes, format="audio/mp3", autoplay=True)
-            with col_audio2:
-                if current_word.get("ex_en"):
-                    if st.button("🗣️ Cümleyi Dinle", key="listen_sent"):
-                        audio_bytes = generate_audio(current_word["ex_en"])
-                        st.audio(audio_bytes, format="audio/mp3", autoplay=True)
+            card_html = f'<div class="word-card"><div class="lang-badge">{badge_text}</div><div class="word-main">{question_text}</div>{answer_html}{example_html}</div>'
+            st.markdown(card_html, unsafe_allow_html=True)
 
-        st.write("")
-        btn_label = "🙈 Cevabı Gizle" if st.session_state.show_meaning else "👀 Cevabı Göster"
-        if st.button(btn_label, key="toggle_meaning"):
-            st.session_state.show_meaning = not st.session_state.show_meaning
-            st.rerun()
+            if mode == "EN_TO_TR" or st.session_state.show_meaning:
+                col_audio1, col_audio2 = st.columns(2)
+                with col_audio1:
+                    if st.button("🔊 Kelimeyi Dinle", key="listen_word"):
+                        st.audio(generate_audio(current_word["en"]), format="audio/mp3", autoplay=True)
+                with col_audio2:
+                    if current_word.get("ex_en"):
+                        if st.button("🗣️ Cümleyi Dinle", key="listen_sent"):
+                            st.audio(generate_audio(current_word["ex_en"]), format="audio/mp3", autoplay=True)
+
+            st.write("")
+            btn_label = "🙈 Cevabı Gizle" if st.session_state.show_meaning else "👀 Cevabı Göster"
+            if st.button(btn_label, key="toggle_meaning"):
+                st.session_state.show_meaning = not st.session_state.show_meaning
+                st.rerun()
+
+        # --- DURUM B: YAPAY ZEKA CÜMLE ÇEVİRİSİ KARTI ---
+        else:
+            sent_data = st.session_state.card_ai_sentence
+            if mode == "SENT_EN_TO_TR":
+                badge_text = "✍️ Cümle Çevirisi: 🇬🇧 İngilizce ➔ 🇹🇷 Türkçe"
+                target_info = f"Hedef Kelime: {current_word['en']}"
+                instruction = "Aşağıdaki İngilizce cümleyi kurallı bir şekilde Türkçeye çevir:"
+            else:
+                badge_text = "✍️ Cümle Çevirisi: 🇹🇷 Türkçe ➔ 🇬🇧 İngilizce"
+                target_info = f"Kullanılacak Kelime: {current_word['en']} ({current_word['tr']})"
+                instruction = f"Aşağıdaki cümleyi '{current_word['en']}' kelimesini doğru yazarak İngilizceye çevir:"
+
+            card_html = f'<div class="word-card"><div class="lang-badge">{badge_text}</div><br><div class="target-pill">{target_info}</div><div style="font-size:0.9rem; color:#52796F; margin-top:4px;">{instruction}</div><div class="sentence-main">"{sent_data["source_sentence"]}"</div></div>'
+            st.markdown(card_html, unsafe_allow_html=True)
+
+            if mode == "SENT_EN_TO_TR":
+                if st.button("🔊 Cümleyi Dinle", key="listen_ai_sent"):
+                    st.audio(generate_audio(sent_data["source_sentence"]), format="audio/mp3", autoplay=True)
+
+            user_translation = st.text_area("Çevirini buraya yaz:", key=f"card_input_{st.session_state.card_index}", height=90, placeholder="Cümlenizi yazıp aşağıdaki kontrol butonuna basın...")
+            
+            if st.button("🤖 Yapay Zeka ile Kontrol Et", key="check_card_ai"):
+                if user_translation.strip():
+                    with st.spinner("🤖 Yapay zeka yazım ve gramer kontrolü yapıyor..."):
+                        st.session_state.card_ai_eval = ai_evaluate_translation(
+                            sent_data["source_sentence"],
+                            user_translation.strip(),
+                            current_word,
+                            mode
+                        )
+                else:
+                    st.warning("⚠️ Lütfen önce boşluğa çevirinizi yazın.")
+
+            if st.session_state.card_ai_eval:
+                ev = st.session_state.card_ai_eval
+                if ev["is_correct"]:
+                    st.success(f"✅ **Harika! (Puan: {ev['score']}/100)**\n\n{ev['feedback']}")
+                else:
+                    st.error(f"❌ **Geliştirilmeli (Puan: {ev['score']}/100)**\n\n{ev['feedback']}")
+                
+                if ev.get("ideal_answer"):
+                    st.info(f"💡 **Örnek Doğru Çeviri:** {ev['ideal_answer']}")
+                    if mode == "SENT_TR_TO_EN":
+                        if st.button("🔊 Doğru İngilizce Cümleyi Dinle", key="listen_ideal_card"):
+                            st.audio(generate_audio(ev["ideal_answer"]), format="audio/mp3", autoplay=True)
 
         st.write("")
         c1, c2, c3 = st.columns(3)
         with c1:
             if st.button("⬅️ Önceki"):
-                st.session_state.card_index = (st.session_state.card_index - 1) % len(words)
-                st.session_state.card_dir = random.choice(["EN_TO_TR", "TR_TO_EN"])
-                st.session_state.show_meaning = False
+                reset_card_state((st.session_state.card_index - 1) % len(words), level)
                 st.rerun()
         with c2:
             if st.button("🎲 Rastgele"):
-                st.session_state.card_index = random.randint(0, len(words) - 1)
-                st.session_state.card_dir = random.choice(["EN_TO_TR", "TR_TO_EN"])
-                st.session_state.show_meaning = False
+                reset_card_state(random.randint(0, len(words) - 1), level)
                 st.rerun()
         with c3:
             if st.button("Sonraki ➡️"):
-                st.session_state.card_index = (st.session_state.card_index + 1) % len(words)
-                st.session_state.card_dir = random.choice(["EN_TO_TR", "TR_TO_EN"])
-                st.session_state.show_meaning = False
+                reset_card_state((st.session_state.card_index + 1) % len(words), level)
                 st.rerun()
 
-# --- SEKME 2: MINI QUIZ (KARMA YÖNLÜ) ---
+# --- SEKME 2: MINI QUIZ ---
 with tab2:
     st.markdown(f"### 🎯 {level} Seviyesi Hızlı Test")
     st.caption(f"Toplam Skor: **{st.session_state.quiz_score} Doğru** / {st.session_state.quiz_total} Soru")
@@ -491,47 +688,105 @@ with tab2:
         
     q = st.session_state.quiz_question
     q_word = q["word"]
-    q_dir = q["direction"]
+    q_type = q["q_type"]
     
-    if q_dir == "EN_TO_TR":
-        q_badge = "🇬🇧 İngilizce ➔ 🇹🇷 Türkçe"
-        q_prompt = "Bu kelimenin Türkçe karşılığı nedir?"
-        q_display = q_word["en"]
-    else:
-        q_badge = "🇹🇷 Türkçe ➔ 🇬🇧 İngilizce"
-        q_prompt = "Bu ifadenin İngilizce karşılığı nedir?"
-        q_display = q_word["tr"]
-    
-    quiz_card_html = f'<div class="word-card" style="padding: 20px;"><div class="lang-badge">{q_badge}</div><div style="font-size: 0.95rem; color: #52796F; font-weight: 600;">{q_prompt}</div><div class="word-main" style="font-size: 1.9rem; margin-top: 8px;">{q_display}</div></div>'
-    st.markdown(quiz_card_html, unsafe_allow_html=True)
-    
-    # İngilizce kelime görünüyorsa veya soru cevaplandıysa telaffuz butonunu göster
-    if q_dir == "EN_TO_TR" or q["answered"]:
-        if st.button("🔊 İngilizce Telaffuzunu Dinle", key="quiz_audio"):
-            st.audio(generate_audio(q_word["en"]), format="audio/mp3", autoplay=True)
-        
-    st.write("")
-    for idx, opt in enumerate(q["options"]):
-        if st.button(opt, key=f"opt_{idx}", disabled=q["answered"]):
-            q["answered"] = True
-            q["selected"] = opt
-            st.session_state.quiz_total += 1
-            if opt == q["correct_answer"]:
-                st.session_state.quiz_score += 1
-            st.rerun()
-            
-    if q["answered"]:
-        if q["selected"] == q["correct_answer"]:
-            st.success(f"🎉 Harika! Doğru cevap: **{q['correct_answer']}**")
+    # --- QUIZ DURUM A: ÇOKTAN SEÇMELİ KELİME ---
+    if q_type in ["EN_TO_TR", "TR_TO_EN"]:
+        if q_type == "EN_TO_TR":
+            q_badge = "🇬🇧 İngilizce ➔ 🇹🇷 Türkçe (Kelime)"
+            q_prompt = "Bu kelimenin Türkçe karşılığı nedir?"
+            q_display = q_word["en"]
         else:
-            st.error(f"❌ Yanlış! Senin seçimin: {q['selected']} | Doğru cevap: **{q['correct_answer']}**")
+            q_badge = "🇹🇷 Türkçe ➔ 🇬🇧 İngilizce (Kelime)"
+            q_prompt = "Bu ifadenin İngilizce karşılığı nedir?"
+            q_display = q_word["tr"]
+        
+        quiz_card_html = f'<div class="word-card" style="padding: 20px;"><div class="lang-badge">{q_badge}</div><div style="font-size: 0.95rem; color: #52796F; font-weight: 600;">{q_prompt}</div><div class="word-main" style="font-size: 1.9rem; margin-top: 8px;">{q_display}</div></div>'
+        st.markdown(quiz_card_html, unsafe_allow_html=True)
+        
+        if q_type == "EN_TO_TR" or q["answered"]:
+            if st.button("🔊 İngilizce Telaffuzunu Dinle", key="quiz_audio"):
+                st.audio(generate_audio(q_word["en"]), format="audio/mp3", autoplay=True)
             
-        if q_word.get("ex_en"):
-            st.info(f"💡 **Örnek Cümle:** {q_word['ex_en']}\n\n*{q_word.get('ex_tr', '')}*")
+        st.write("")
+        for idx, opt in enumerate(q["options"]):
+            if st.button(opt, key=f"opt_{idx}", disabled=q["answered"]):
+                q["answered"] = True
+                q["selected"] = opt
+                st.session_state.quiz_total += 1
+                if opt == q["correct_answer"]:
+                    st.session_state.quiz_score += 1
+                st.rerun()
+                
+        if q["answered"]:
+            if q["selected"] == q["correct_answer"]:
+                st.success(f"🎉 Harika! Doğru cevap: **{q['correct_answer']}**")
+            else:
+                st.error(f"❌ Yanlış! Senin seçimin: {q['selected']} | Doğru cevap: **{q['correct_answer']}**")
+                
+            if q_word.get("ex_en"):
+                st.info(f"💡 **Örnek Cümle:** {q_word['ex_en']}\n\n*{q_word.get('ex_tr', '')}*")
+                
+            if st.button("Sonraki Soruya Geç ➡️", key="next_quiz_mc"):
+                st.session_state.quiz_question = create_quiz_question(level)
+                st.rerun()
+
+    # --- QUIZ DURUM B: YAPAY ZEKA YAZMA / CÜMLE ÇEVİRİSİ ---
+    else:
+        sent_data = q["sent_data"]
+        if q_type == "SENT_EN_TO_TR":
+            q_badge = "✍️ Yazma Sorusu: 🇬🇧 İngilizce ➔ 🇹🇷 Türkçe"
+            target_info = f"Hedef Kelime: {q_word['en']}"
+            q_prompt = "Bu İngilizce cümleyi Türkçeye çevir:"
+        else:
+            q_badge = "✍️ Yazma Sorusu: 🇹🇷 Türkçe ➔ 🇬🇧 İngilizce"
+            target_info = f"Kullanılacak Kelime: {q_word['en']} ({q_word['tr']})"
+            q_prompt = f"Bu cümleyi '{q_word['en']}' kelimesini doğru yazarak İngilizceye çevir:"
+
+        quiz_card_html = f'<div class="word-card" style="padding: 20px;"><div class="lang-badge">{q_badge}</div><br><div class="target-pill">{target_info}</div><div style="font-size: 0.9rem; color: #52796F; margin-top:4px;">{q_prompt}</div><div class="sentence-main">"{sent_data["source_sentence"]}"</div></div>'
+        st.markdown(quiz_card_html, unsafe_allow_html=True)
+
+        if q_type == "SENT_EN_TO_TR":
+            if st.button("🔊 Cümleyi Dinle", key="quiz_sent_audio"):
+                st.audio(generate_audio(sent_data["source_sentence"]), format="audio/mp3", autoplay=True)
+
+        quiz_user_text = st.text_area("Çevirini buraya yaz:", key=f"quiz_input_{st.session_state.quiz_total}", height=90, disabled=q["answered"])
+
+        if not q["answered"]:
+            if st.button("🤖 Cevabı Kontrol Et", key="submit_quiz_ai"):
+                if quiz_user_text.strip():
+                    with st.spinner("🤖 Yapay zeka cevabını inceliyor..."):
+                        ev = ai_evaluate_translation(
+                            sent_data["source_sentence"],
+                            quiz_user_text.strip(),
+                            q_word,
+                            q_type
+                        )
+                        q["ai_eval"] = ev
+                        q["answered"] = True
+                        st.session_state.quiz_total += 1
+                        if ev["is_correct"]:
+                            st.session_state.quiz_score += 1
+                        st.rerun()
+                else:
+                    st.warning("⚠️ Lütfen önce çevirinizi yazın.")
+
+        if q["answered"] and q.get("ai_eval"):
+            ev = q["ai_eval"]
+            if ev["is_correct"]:
+                st.success(f"🎉 **Tebrikler! Puan kazandın ({ev['score']}/100)**\n\n{ev['feedback']}")
+            else:
+                st.error(f"❌ **Hatalı veya Eksik Çeviri ({ev['score']}/100)**\n\n{ev['feedback']}")
             
-        if st.button("Sonraki Soruya Geç ➡️", key="next_quiz"):
-            st.session_state.quiz_question = create_quiz_question(level)
-            st.rerun()
+            if ev.get("ideal_answer"):
+                st.info(f"💡 **Örnek Doğru Çeviri:** {ev['ideal_answer']}")
+                if q_type == "SENT_TR_TO_EN":
+                    if st.button("🔊 Doğru İngilizce Cümleyi Dinle", key="listen_ideal_quiz"):
+                        st.audio(generate_audio(ev["ideal_answer"]), format="audio/mp3", autoplay=True)
+
+            if st.button("Sonraki Soruya Geç ➡️", key="next_quiz_ai"):
+                st.session_state.quiz_question = create_quiz_question(level)
+                st.rerun()
 
 # --- SEKME 3: YENİ KELİME EKLEME MENÜSÜ ---
 with tab3:
