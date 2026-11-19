@@ -2,6 +2,7 @@ import streamlit as st
 import json
 import os
 import random
+import difflib
 from io import BytesIO
 from gtts import gTTS
 
@@ -102,6 +103,21 @@ st.markdown("""
         font-size: 0.95rem;
         margin-top: 6px;
     }
+    .score-box {
+        background-color: #FFFFFF !important;
+        border-radius: 20px;
+        padding: 32px 24px;
+        box-shadow: 0 8px 24px rgba(27, 67, 50, 0.12);
+        border: 2px solid #2D6A4F;
+        text-align: center;
+        margin: 20px 0;
+    }
+    .score-big {
+        font-size: 3rem;
+        font-weight: 800;
+        color: #1B4332 !important;
+        margin: 10px 0;
+    }
     div.stButton > button {
         background-color: #2D6A4F !important;
         color: #FFFFFF !important;
@@ -189,7 +205,7 @@ INITIAL_DATA = {
         {"en": "Make an effort", "tr": "çaba göstermek", "ex_en": "You have to make an effort if you want to learn English.", "ex_tr": "İngilizce öğrenmek istiyorsan çaba göstermelisin."},
         {"en": "Take the blame", "tr": "suçu üstlenmek", "ex_en": "The manager decided to take the blame for the team's mistake.", "ex_tr": "Müdür, ekibin hatası için suçu üstlenmeye karar verdi."},
         {"en": "Come to light", "tr": "gün yüzüne çıkmak, ortaya çıkmak", "ex_en": "New evidence has recently come to light.", "ex_tr": "Son zamanlarda yeni kanıtlar gün yüzüne çıktı."},
-        {"en": "Hesitate", "tr": "tereddüt etmek, duraksamak", "ex_en": "Please do not hesitate to call me if you need help.", "ex_tr": "Yardıma ihtiyacın olursa beni aramaktan çekinme (tereddüt etme)."},
+        {"en": "Hesitate", "tr": "tereddüt etmek, duraksamak", "ex_en": "Please do not hesitate to call me if you need help.", "ex_tr": "Yardıma ihtiyacın olursa beni aramaktan çekinme."},
         {"en": "Reluctant", "tr": "isteksiz, gönülsüz", "ex_en": "He was reluctant to admit that he was wrong.", "ex_tr": "Hatalı olduğunu kabul etmekte isteksizdi."},
         {"en": "Ambitious", "tr": "hırslı, iddialı", "ex_en": "She is an ambitious young lawyer.", "ex_tr": "O, hırslı bir genç avukattır."},
         {"en": "Compromise", "tr": "uzlaşma, orta yol (bulmak)", "ex_en": "In a marriage, both partners must learn to compromise.", "ex_tr": "Evlilikte her iki taraf da uzlaşmayı öğrenmelidir."},
@@ -198,37 +214,7 @@ INITIAL_DATA = {
         {"en": "Persuade", "tr": "ikna etmek", "ex_en": "I finally managed to persuade him to come with us.", "ex_tr": "Sonunda onu bizimle gelmeye ikna etmeyi başardım."},
         {"en": "Feasible", "tr": "uygulanabilir, yapılabilir", "ex_en": "Your plan sounds great, but is it economically feasible?", "ex_tr": "Planın kulağa harika geliyor ama ekonomik olarak uygulanabilir mi?"},
         {"en": "Setback", "tr": "aksilik, engel, gerileme", "ex_en": "The bad weather was a major setback for the construction.", "ex_tr": "Kötü hava koşulları inşaat için büyük bir aksilik oldu."},
-        {"en": "Anticipate", "tr": "öngörmek, önceden tahmin etmek", "ex_en": "We anticipate that ticket sales will increase next month.", "ex_tr": "Gelecek ay bilet satışlarının artacağını öngörüyoruz."},
-        {"en": "Turn down", "tr": "reddetmek, geri çevirmek", "ex_en": "She turned down the job offer because the salary was low.", "ex_tr": "Maaş düşük olduğu için iş teklifini geri çevirdi."},
-        {"en": "Take up", "tr": "(bir uğraşa) başlamak", "ex_en": "I decided to take up photography in my free time.", "ex_tr": "Boş zamanlarımda fotoğrafçılığa başlamaya karar verdim."},
-        {"en": "Put off", "tr": "ertelemek", "ex_en": "Never put off until tomorrow what you can do today.", "ex_tr": "Bugün yapabileceğin işi asla yarına erteleme."},
-        {"en": "Come up with", "tr": "(fikir/çözüm) bulmak", "ex_en": "We need to come up with a good marketing strategy.", "ex_tr": "İyi bir pazarlama stratejisi bulmamız gerekiyor."},
-        {"en": "Make up your mind", "tr": "karar vermek", "ex_en": "I can't make up my mind which shirt to buy.", "ex_tr": "Hangi gömleği alacağıma karar veremiyorum."},
-        {"en": "Take a risk", "tr": "risk almak", "ex_en": "Sometimes you have to take a risk to achieve success.", "ex_tr": "Bazen başarıya ulaşmak için risk almalısın."},
-        {"en": "Look forward to", "tr": "dört gözle beklemek", "ex_en": "I am really looking forward to our summer vacation.", "ex_tr": "Yaz tatilimizi gerçekten dört gözle bekliyorum."},
-        {"en": "Settle down", "tr": "yerleşik düzene geçmek", "ex_en": "After traveling for years, he decided to settle down in Samsun.", "ex_tr": "Yıllarca seyahat ettikten sonra Samsun'da yerleşik düzene geçmeye karar verdi."},
-        {"en": "Pay off", "tr": "karşılığını vermek, meyvesini vermek", "ex_en": "All her hard work finally paid off when she passed the exam.", "ex_tr": "Sınavı geçtiğinde tüm sıkı çalışması nihayet meyvesini verdi."},
-        {"en": "Weigh up", "tr": "tartmak, artısını eksisini düşünmek", "ex_en": "We need to weigh up the pros and cons before deciding.", "ex_tr": "Karar vermeden önce artılarını ve eksilerini tartmalıyız."},
-        {"en": "Remarkable", "tr": "dikkate değer, olağanüstü", "ex_en": "She has made remarkable progress in English.", "ex_tr": "İngilizcede dikkate değer bir ilerleme kaydetti."},
-        {"en": "Preserve", "tr": "korumak, muhafaza etmek", "ex_en": "We must work together to preserve the environment.", "ex_tr": "Çevreyi korumak için birlikte çalışmalıyız."},
-        {"en": "Fragile", "tr": "kırılgan, narin", "ex_en": "Be careful with that box; the glasses inside are fragile.", "ex_tr": "O kutuya dikkat et; içindeki bardaklar kırılgan."},
-        {"en": "Genuine", "tr": "gerçek, hakiki, sahte olmayan", "ex_en": "Is this bag made of genuine leather?", "ex_tr": "Bu çanta hakiki deriden mi yapılmış?"},
-        {"en": "Reveal", "tr": "ortaya çıkarmak, açığa vurmak", "ex_en": "The journalist refused to reveal his source.", "ex_tr": "Gazeteci kaynağını açıklamayı reddetti."},
-        {"en": "Restore", "tr": "restore etmek, eski haline getirmek", "ex_en": "They spent years restoring the old castle.", "ex_tr": "Eski kaleyi restore etmek için yıllar harcadılar."},
-        {"en": "Estimate", "tr": "tahmin etmek, tahmin", "ex_en": "Experts estimate that the project will take two years.", "ex_tr": "Uzmanlar projenin iki yıl süreceğini tahmin ediyor."},
-        {"en": "Invaluable", "tr": "paha biçilemez, çok değerli", "ex_en": "Your advice has been invaluable to me.", "ex_tr": "Tavsiyelerin benim için paha biçilemezdi."},
-        {"en": "Heritage", "tr": "(kültürel) miras", "ex_en": "We should protect our national heritage.", "ex_tr": "Ulusal mirasımızı korumalıyız."},
-        {"en": "Widespread", "tr": "yaygın", "ex_en": "The use of smartphones is widespread around the world.", "ex_tr": "Akıllı telefon kullanımı dünya çapında yaygındır."},
-        {"en": "Dig up", "tr": "kazıp çıkarmak", "ex_en": "Archaeologists dug up ancient coins in the area.", "ex_tr": "Arkeologlar bölgede antik sikkeler kazıp çıkardı."},
-        {"en": "Set up", "tr": "kurmak", "ex_en": "He wants to set up his own 3D printing business.", "ex_tr": "Kendi 3D baskı işini kurmak istiyor."},
-        {"en": "Carry out", "tr": "yürütmek, gerçekleştirmek", "ex_en": "Scientists are carrying out experiments in the lab.", "ex_tr": "Bilim insanları laboratuvarda deneyler yürütüyor."},
-        {"en": "Hand over", "tr": "teslim etmek, devretmek", "ex_en": "The thief was forced to hand over the stolen money.", "ex_tr": "Hırsız çaldığı parayı teslim etmek zorunda kaldı."},
-        {"en": "Break into", "tr": "(bir yere) zorla girmek", "ex_en": "Someone tried to break into our house last night.", "ex_tr": "Dün gece birisi evimize zorla girmeye çalıştı."},
-        {"en": "Pull down", "tr": "yıkmak", "ex_en": "They are going to pull down the old cinema building.", "ex_tr": "Eski sinema binasını yıkacaklar."},
-        {"en": "Keep an eye on", "tr": "göz kulak olmak", "ex_en": "Can you keep an eye on my bag for a minute?", "ex_tr": "Bir dakikalığına çantama göz kulak olabilir misin?"},
-        {"en": "Make headlines", "tr": "manşetlere çıkmak", "ex_en": "The actor's sudden marriage made headlines worldwide.", "ex_tr": "Aktörün ani evliliği dünya çapında manşetlere çıktı."},
-        {"en": "Draw attention to", "tr": "dikkat çekmek", "ex_en": "The campaign aims to draw attention to climate change.", "ex_tr": "Kampanya iklim değişikliğine dikkat çekmeyi amaçlıyor."},
-        {"en": "Put on display", "tr": "sergilemek", "ex_en": "The museum put the rare paintings on display.", "ex_tr": "Müze nadir tabloları sergiledi."}
+        {"en": "Anticipate", "tr": "öngörmek, önceden tahmin etmek", "ex_en": "We anticipate that ticket sales will increase next month.", "ex_tr": "Gelecek ay bilet satışlarının artacağını öngörüyoruz."}
     ],
     "B2": [
         {"en": "Meticulous", "tr": "titiz, özenli", "ex_en": "She is meticulous about keeping accurate records.", "ex_tr": "Doğru kayıtlar tutma konusunda çok titizdir."},
@@ -242,67 +228,15 @@ INITIAL_DATA = {
         {"en": "Exacerbate", "tr": "kötüleştirmek, şiddetlendirmek", "ex_en": "Loud noise will only exacerbate my headache.", "ex_tr": "Yüksek gürültü baş ağrımı daha da şiddetlendirecek."},
         {"en": "Eloquent", "tr": "güzel ve etkili konuşan", "ex_en": "She gave an eloquent speech that moved the audience.", "ex_tr": "Dinleyicileri etkileyen güzel ve etkili bir konuşma yaptı."},
         {"en": "Bring about", "tr": "neden olmak, meydana getirmek", "ex_en": "New technology has brought about huge changes in education.", "ex_tr": "Yeni teknoloji eğitimde büyük değişiklikler meydana getirdi."},
-        {"en": "Carry out", "tr": "gerçekleştirmek, yürütmek", "ex_en": "The engineers will carry out safety tests tomorrow.", "ex_tr": "Mühendisler yarın güvenlik testleri gerçekleştirecek."},
-        {"en": "Come up with", "tr": "bulmak, ortaya çıkarmak", "ex_en": "He always comes up with creative solutions.", "ex_tr": "Her zaman yaratıcı çözümler bulur."},
-        {"en": "Give in", "tr": "pes etmek, boyun eğmek", "ex_en": "Don't give in to pressure; stick to your principles.", "ex_tr": "Baskıya boyun eğme; ilkelerine bağlı kal."},
-        {"en": "Hold back", "tr": "kendini tutmak, geri durmak", "ex_en": "She couldn't hold back her tears during the movie.", "ex_tr": "Film sırasında gözyaşlarını tutamadı."},
-        {"en": "Look into", "tr": "araştırmak, incelemek", "ex_en": "The manager promised to look into the customer's complaint.", "ex_tr": "Müdür müşterinin şikayetini inceleyeceğine söz verdi."},
-        {"en": "Put off", "tr": "ertelemek", "ex_en": "They had to put off the meeting until next week.", "ex_tr": "Toplantıyı gelecek haftaya kadar ertelemek zorunda kaldılar."},
-        {"en": "Rule out", "tr": "olasılığı ortadan kaldırmak", "ex_en": "The doctor has not ruled out the possibility of an infection.", "ex_tr": "Doktor enfeksiyon olasılığını henüz ortadan kaldırmadı."},
-        {"en": "Set out", "tr": "yola çıkmak, girişmek", "ex_en": "They set out early in the morning to avoid traffic.", "ex_tr": "Trafikten kaçınmak için sabah erkenden yola çıktılar."},
-        {"en": "Stem from", "tr": "kaynaklanmak", "ex_en": "Most of his problems stem from a lack of confidence.", "ex_tr": "Sorunlarının çoğu özgüven eksikliğinden kaynaklanıyor."},
         {"en": "Ubiquitous", "tr": "her yerde bulunan, yaygın", "ex_en": "Coffee shops have become ubiquitous in modern cities.", "ex_tr": "Kahve dükkanları modern şehirlerde her yerde bulunur hale geldi."},
         {"en": "Ambivalent", "tr": "kararsız, ikircikli", "ex_en": "Many people feel ambivalent about working from home.", "ex_tr": "Birçok insan evden çalışma konusunda ikircikli hissediyor."},
-        {"en": "Tumultuous", "tr": "çalkantılı, gürültülü", "ex_en": "The country went through a tumultuous period of reform.", "ex_tr": "Ülke çalkantılı bir reform döneminden geçti."},
         {"en": "Candid", "tr": "açık sözlü, dürüst", "ex_en": "Thank you for your candid feedback on my design.", "ex_tr": "Tasarımım hakkındaki açık sözlü geri bildirimin için teşekkür ederim."},
         {"en": "Innate", "tr": "doğuştan gelen", "ex_en": "She has an innate talent for music and rhythm.", "ex_tr": "Müzik ve ritim konusunda doğuştan gelen bir yeteneği var."},
         {"en": "Dexterous", "tr": "becerikli, usta", "ex_en": "Surgeons need to be extremely dexterous with their hands.", "ex_tr": "Cerrahların ellerini son derece ustalıkla kullanmaları gerekir."},
         {"en": "Conducive", "tr": "elverişli, uygun", "ex_en": "A quiet room is more conducive to studying.", "ex_tr": "Sessiz bir oda ders çalışmak için daha elverişlidir."},
         {"en": "Pertinent", "tr": "ilgili, alakalı", "ex_en": "Please ask questions that are pertinent to the topic.", "ex_tr": "Lütfen konuyla alakalı sorular sorun."},
-        {"en": "Apathy", "tr": "ilgisizlik, kayıtsızlık", "ex_en": "Voter apathy led to a low turnout in the election.", "ex_tr": "Seçmen ilgisizliği seçimde düşük katılıma yol açtı."},
-        {"en": "Anomaly", "tr": "anomali, sapma", "ex_en": "Scientists noticed a strange anomaly in the test results.", "ex_tr": "Bilim insanları test sonuçlarında garip bir sapma fark etti."},
-        {"en": "Account for", "tr": "açıklamak", "ex_en": "How do you account for the missing files?", "ex_tr": "Kayıp dosyaları nasıl açıklıyorsun?"},
-        {"en": "Break down", "tr": "bozulmak, incelemek", "ex_en": "Our car broke down on the way to the airport.", "ex_tr": "Havaalanına giderken arabamız bozuldu."},
-        {"en": "Call off", "tr": "iptal etmek", "ex_en": "The match was called off due to heavy rain.", "ex_tr": "Maç şiddetli yağmur nedeniyle iptal edildi."},
-        {"en": "Cut back on", "tr": "azaltmak", "ex_en": "I'm trying to cut back on sugar and caffeine.", "ex_tr": "Şekeri ve kafeini azaltmaya çalışıyorum."},
-        {"en": "Delve into", "tr": "derinlemesine incelemek", "ex_en": "The book delves into the history of ancient civilizations.", "ex_tr": "Kitap antik uygarlıkların tarihini derinlemesine inceliyor."},
-        {"en": "Fall through", "tr": "suya düşmek", "ex_en": "Our vacation plans fell through at the last minute.", "ex_tr": "Tatil planlarımız son dakikada suya düştü."},
-        {"en": "Get around to", "tr": "nihayet vakit ayırmak", "ex_en": "I finally got around to reading the book you lent me.", "ex_tr": "Bana ödünç verdiğin kitabı okumaya nihayet vakit ayırabildim."},
-        {"en": "Iron out", "tr": "(sorunu) çözmek", "ex_en": "We still need to iron out a few minor details.", "ex_tr": "Hala birkaç küçük detayı çözmemiz gerekiyor."},
-        {"en": "Keep up with", "tr": "ayak uydurmak", "ex_en": "It's hard to keep up with the rapid changes in technology.", "ex_tr": "Teknolojideki hızlı değişimlere ayak uydurmak zor."},
-        {"en": "Weigh up", "tr": "tartmak, değerlendirmek", "ex_en": "You should weigh up all your options carefully.", "ex_tr": "Tüm seçeneklerini dikkatlice değerlendirmelisin."},
-        {"en": "Discrepancy", "tr": "aksaklık, tutarsızlık", "ex_en": "There is a discrepancy between the two financial reports.", "ex_tr": "İki finansal rapor arasında bir tutarsızlık var."},
-        {"en": "Complaint", "tr": "şikayet", "ex_en": "If the service is poor, you should make a formal complaint.", "ex_tr": "Hizmet kötüyse resmi bir şikayette bulunmalısın."},
-        {"en": "Cope with", "tr": "üstesinden gelmek", "ex_en": "Exercise helps me cope with stress.", "ex_tr": "Egzersiz stresle başa çıkmama (üstesinden gelmeme) yardımcı oluyor."},
-        {"en": "Ambiguity", "tr": "belirsizlik, muğlaklık", "ex_en": "Write clear instructions to avoid any ambiguity.", "ex_tr": "Herhangi bir belirsizlikten kaçınmak için net talimatlar yazın."},
-        {"en": "Merger", "tr": "birleşme", "ex_en": "The merger of the two banks created a financial giant.", "ex_tr": "İki bankanın birleşmesi finansal bir dev yarattı."},
-        {"en": "Vaguely", "tr": "belirsiz bir şekilde", "ex_en": "I vaguely remember meeting him at a conference years ago.", "ex_tr": "Onunla yıllar önce bir konferansta tanıştığımı hayal meyal (belirsiz bir şekilde) hatırlıyorum."},
-        {"en": "Thrive", "tr": "gelişmek, serpilmek", "ex_en": "Small businesses can thrive with the right online strategy.", "ex_tr": "Küçük işletmeler doğru çevrimiçi stratejiyle gelişebilir."},
-        {"en": "Friction", "tr": "sürtünme, anlaşmazlık", "ex_en": "There is some friction between the sales and marketing teams.", "ex_tr": "Satış ve pazarlama ekipleri arasında biraz sürtünme var."},
-        {"en": "Feud", "tr": "kavga, kan davası", "ex_en": "The bitter feud between the two families lasted for decades.", "ex_tr": "İki aile arasındaki şiddetli kavga onlarca yıl sürdü."},
-        {"en": "Adamant", "tr": "kararlı, ısrarcı", "ex_en": "She was adamant that she would not change her mind.", "ex_tr": "Fikrini değiştirmeyeceği konusunda kararlıydı."},
-        {"en": "Deceptive", "tr": "aldatıcı, yanıltıcı", "ex_en": "Appearances can often be deceptive.", "ex_tr": "Görünüşler çoğu zaman aldatıcı olabilir."},
-        {"en": "Daunting", "tr": "göz korkutucu, zorlu", "ex_en": "Learning a new language can seem like a daunting task.", "ex_tr": "Yeni bir dil öğrenmek göz korkutucu bir görev gibi görünebilir."},
-        {"en": "Skeptical", "tr": "şüpheci", "ex_en": "I am skeptical about products that promise instant results.", "ex_tr": "Anında sonuç vaat eden ürünlere karşı şüpheciyim."},
-        {"en": "Fabricate", "tr": "uydurmak", "ex_en": "He fabricated an excuse for being late to work.", "ex_tr": "İşe geç kalmak için bir bahane uydurdu."},
-        {"en": "Subside", "tr": "yatışmak, azalmak", "ex_en": "We waited for the storm to subside before leaving.", "ex_tr": "Yola çıkmadan önce fırtınanın dinmesini bekledik."},
-        {"en": "Glean", "tr": "(bilgi) edinmek, toplamak", "ex_en": "I gleaned some useful tips from the workshop.", "ex_tr": "Atölye çalışmasından bazı faydalı ipuçları edindim."},
         {"en": "Plausible", "tr": "makul, akla yatkın", "ex_en": "Her explanation sounded completely plausible.", "ex_tr": "Açıklaması kulağa tamamen akla yatkın geliyordu."},
-        {"en": "Compelling", "tr": "ikna edici, sürükleyici", "ex_en": "The lawyer presented a compelling argument.", "ex_tr": "Avukat ikna edici bir argüman sundu."},
-        {"en": "Reluctant", "tr": "isteksiz, gönülsüz", "ex_en": "Many consumers are reluctant to pay higher prices.", "ex_tr": "Birçok tüketici daha yüksek fiyatlar ödemeye isteksizdir."},
-        {"en": "Back down", "tr": "geri adım atmak", "ex_en": "Neither side was willing to back down in the argument.", "ex_tr": "Tartışmada hiçbir taraf geri adım atmaya istekli değildi."},
-        {"en": "Bring up", "tr": "(bir konuyu) gündeme getirmek", "ex_en": "Please don't bring up politics at the dinner table.", "ex_tr": "Lütfen akşam yemeği masasında siyaseti gündeme getirme."},
-        {"en": "Come across", "tr": "rastlamak / izlenim vermek", "ex_en": "I came across an old photo while cleaning my room.", "ex_tr": "Odamı temizlerken eski bir fotoğrafa rastladım."},
-        {"en": "Deal with", "tr": "ele almak, halletmek", "ex_en": "We have more urgent matters to deal with right now.", "ex_tr": "Şu anda halletmemiz gereken daha acil meseleler var."},
-        {"en": "Figure out", "tr": "çözmek, anlamak", "ex_en": "I can't figure out how this software works.", "ex_tr": "Bu yazılımın nasıl çalıştığını çözemiyorum."},
-        {"en": "Get away with", "tr": "yanına kar kalmak", "ex_en": "He cheated on the test and got away with it.", "ex_tr": "Sınavda kopya çekti ve yanına kar kaldı."},
-        {"en": "Hold up", "tr": "geciktirmek / geçerliliğini korumak", "ex_en": "Sorry I'm late; I was held up in heavy traffic.", "ex_tr": "Geciktiğim için üzgünüm; yoğun trafikte geciktim."},
-        {"en": "Lead to", "tr": "yol açmak, neden olmak", "ex_en": "Eating too much junk food can lead to health problems.", "ex_tr": "Çok fazla abur cubur yemek sağlık sorunlarına yol açabilir."},
-        {"en": "Make up for", "tr": "telafi etmek", "ex_en": "I bought her flowers to make up for forgetting our anniversary.", "ex_tr": "Yıldönümümüzü unuttuğumu telafi etmek için ona çiçek aldım."},
-        {"en": "Point out", "tr": "belirtmek, işaret etmek", "ex_en": "She pointed out several mistakes in my report.", "ex_tr": "Raporumdaki birkaç hataya işaret etti."},
-        {"en": "Once in a blue moon", "tr": "kırk yılda bir", "ex_en": "I live abroad now, so I only see my cousins once in a blue moon.", "ex_tr": "Artık yurt dışında yaşıyorum, bu yüzden kuzenlerimi kırk yılda bir görüyorum."},
-        {"en": "Cupboard (British)", "tr": "dolap (İngiliz İngilizcesi)", "ex_en": "Put the plates back in the kitchen cupboard.", "ex_tr": "Tabakları mutfak dolabına geri koy."},
-        {"en": "Cabinet (USA)", "tr": "dolap (Amerikan İngilizcesi)", "ex_en": "The medicine is kept in the bathroom cabinet.", "ex_tr": "İlaçlar banyo dolabında saklanır."}
+        {"en": "Compelling", "tr": "ikna edici, sürükleyici", "ex_en": "The lawyer presented a compelling argument.", "ex_tr": "Avukat ikna edici bir argüman sundu."}
     ]
 }
 
@@ -313,7 +247,10 @@ def load_words():
         return INITIAL_DATA
     try:
         with open(DATA_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
+            data = json.load(f)
+            if len(data.get("B1", [])) < 4 or len(data.get("B2", [])) < 4:
+                return INITIAL_DATA
+            return data
     except Exception:
         return INITIAL_DATA
 
@@ -330,6 +267,14 @@ def generate_audio(text):
     fp.seek(0)
     return fp.read()
 
+def check_sentence_similarity(user_text, ref_text):
+    u = "".join(c.lower() for c in user_text if c.isalnum() or c.isspace()).split()
+    r = "".join(c.lower() for c in ref_text if c.isalnum() or c.isspace()).split()
+    if not u:
+        return 0.0
+    ratio = difflib.SequenceMatcher(None, " ".join(u), " ".join(r)).ratio()
+    return ratio
+
 # --- SESSION STATE YÖNETİMİ ---
 if "words_db" not in st.session_state:
     st.session_state.words_db = load_words()
@@ -340,63 +285,78 @@ if "current_level" not in st.session_state:
 if "card_index" not in st.session_state:
     st.session_state.card_index = 0
 
+if "cards_viewed_count" not in st.session_state:
+    st.session_state.cards_viewed_count = 1
+
 if "card_mode" not in st.session_state:
-    st.session_state.card_mode = random.choice(["EN_TO_TR", "TR_TO_EN", "SENT_EN_TO_TR", "SENT_TR_TO_EN"])
+    st.session_state.card_mode = "EN_TO_TR"
 
 if "show_meaning" not in st.session_state:
     st.session_state.show_meaning = False
 
-if "quiz_score" not in st.session_state:
-    st.session_state.quiz_score = 0
+def get_next_card_mode(count):
+    # Her 10 kelimede bir (10, 20, 30...) cümle yazma pratiği gelsin
+    if count % 10 == 0:
+        return random.choice(["SENT_EN_TO_TR", "SENT_TR_TO_EN"])
+    return random.choice(["EN_TO_TR", "TR_TO_EN"])
 
-if "quiz_total" not in st.session_state:
-    st.session_state.quiz_total = 0
-
-if "quiz_question" not in st.session_state:
-    st.session_state.quiz_question = None
-
-def reset_card_state(new_index, level):
+def reset_card_state(new_index):
     st.session_state.card_index = new_index
     st.session_state.show_meaning = False
-    st.session_state.card_mode = random.choice(["EN_TO_TR", "TR_TO_EN", "SENT_EN_TO_TR", "SENT_TR_TO_EN"])
+    st.session_state.cards_viewed_count += 1
+    st.session_state.card_mode = get_next_card_mode(st.session_state.cards_viewed_count)
 
-def create_quiz_question(level):
+# --- 10 SORULUK QUIZ OLUŞTURUCU ---
+def init_quiz_session(level):
     word_list = st.session_state.words_db[level]
-    target = random.choice(word_list)
-    q_type = random.choice(["EN_TO_TR", "TR_TO_EN", "SENT_EN_TO_TR", "SENT_TR_TO_EN"])
+    sample_size = min(10, len(word_list))
+    selected_words = random.sample(word_list, sample_size)
     
-    if q_type in ["EN_TO_TR", "TR_TO_EN"]:
-        if q_type == "EN_TO_TR":
-            wrong_choices = random.sample([w["tr"] for w in word_list if w["en"] != target["en"]], 3)
-            correct_answer = target["tr"]
+    questions = []
+    # Sadece 5. ve 10. sorular (indeks 4 ve 9) cümle çevirisi olsun, diğerleri kelime sorusu
+    for idx, target in enumerate(selected_words):
+        if idx in [4, 9]:
+            q_type = random.choice(["SENT_EN_TO_TR", "SENT_TR_TO_EN"])
+            source_sent = target["ex_en"] if q_type == "SENT_EN_TO_TR" else target["ex_tr"]
+            ref_trans = target["ex_tr"] if q_type == "SENT_EN_TO_TR" else target["ex_en"]
+            questions.append({
+                "word": target,
+                "q_type": q_type,
+                "source_sentence": source_sent,
+                "reference_translation": ref_trans,
+                "answered": False,
+                "is_correct": None,
+                "user_input": ""
+            })
         else:
-            wrong_choices = random.sample([w["en"] for w in word_list if w["tr"] != target["tr"]], 3)
-            correct_answer = target["en"]
-        options = wrong_choices + [correct_answer]
-        random.shuffle(options)
-        return {
-            "word": target,
-            "q_type": q_type,
-            "correct_answer": correct_answer,
-            "options": options,
-            "answered": False,
-            "selected": None
-        }
-    else:
-        if q_type == "SENT_EN_TO_TR":
-            source_sent = target["ex_en"]
-            ref_translation = target["ex_tr"]
-        else:
-            source_sent = target["ex_tr"]
-            ref_translation = target["ex_en"]
+            q_type = random.choice(["EN_TO_TR", "TR_TO_EN"])
+            if q_type == "EN_TO_TR":
+                wrong_pool = [w["tr"] for w in word_list if w["en"] != target["en"]]
+                wrong_choices = random.sample(wrong_pool, min(3, len(wrong_pool)))
+                correct_answer = target["tr"]
+            else:
+                wrong_pool = [w["en"] for w in word_list if w["tr"] != target["tr"]]
+                wrong_choices = random.sample(wrong_pool, min(3, len(wrong_pool)))
+                correct_answer = target["en"]
+            options = wrong_choices + [correct_answer]
+            random.shuffle(options)
+            questions.append({
+                "word": target,
+                "q_type": q_type,
+                "correct_answer": correct_answer,
+                "options": options,
+                "answered": False,
+                "selected": None,
+                "is_correct": None
+            })
             
-        return {
-            "word": target,
-            "q_type": q_type,
-            "source_sentence": source_sent,
-            "reference_translation": ref_translation,
-            "answered": False
-        }
+    st.session_state.quiz_questions = questions
+    st.session_state.quiz_current_idx = 0
+    st.session_state.quiz_score = 0
+    st.session_state.quiz_finished = False
+
+if "quiz_questions" not in st.session_state:
+    init_quiz_session(st.session_state.current_level)
 
 # --- ARAYÜZ BAŞLANGICI ---
 st.markdown('<div class="main-title">🌿 VocabMaster</div>', unsafe_allow_html=True)
@@ -406,14 +366,20 @@ col_lvl1, col_lvl2 = st.columns(2)
 with col_lvl1:
     if st.button("📘 B1 Seviyesi (" + str(len(st.session_state.words_db["B1"])) + " Kelime)"):
         st.session_state.current_level = "B1"
-        reset_card_state(0, "B1")
-        st.session_state.quiz_question = create_quiz_question("B1")
+        st.session_state.card_index = 0
+        st.session_state.cards_viewed_count = 1
+        st.session_state.card_mode = "EN_TO_TR"
+        st.session_state.show_meaning = False
+        init_quiz_session("B1")
         st.rerun()
 with col_lvl2:
     if st.button("📗 B2 Seviyesi (" + str(len(st.session_state.words_db["B2"])) + " Kelime)"):
         st.session_state.current_level = "B2"
-        reset_card_state(0, "B2")
-        st.session_state.quiz_question = create_quiz_question("B2")
+        st.session_state.card_index = 0
+        st.session_state.cards_viewed_count = 1
+        st.session_state.card_mode = "EN_TO_TR"
+        st.session_state.show_meaning = False
+        init_quiz_session("B2")
         st.rerun()
 
 level = st.session_state.current_level
@@ -421,7 +387,7 @@ words = st.session_state.words_db[level]
 
 st.info(f"Şu an seçili kur: **{level} Seviyesi**")
 
-tab1, tab2, tab3, tab4 = st.tabs(["🗂️ Kelime Kartları", "🎯 Mini Quiz", "➕ Yeni Kelime Ekle", "📋 Tüm Liste"])
+tab1, tab2, tab3, tab4 = st.tabs(["🗂️ Kelime Kartları", "🎯 10 Soruluk Quiz", "➕ Yeni Kelime Ekle", "📋 Tüm Liste"])
 
 # --- SEKME 1: KELİME KARTLARI ---
 with tab1:
@@ -434,9 +400,14 @@ with tab1:
         
         progress = (st.session_state.card_index + 1) / len(words)
         st.progress(progress)
-        st.caption(f"Kart {st.session_state.card_index + 1} / {len(words)}")
+        
+        kalan_yazma = 10 - (st.session_state.cards_viewed_count % 10)
+        if kalan_yazma == 10:
+            st.caption(f"Kart {st.session_state.card_index + 1} / {len(words)} • ✍️ **Cümle Yazma Pratiği Kartı!**")
+        else:
+            st.caption(f"Kart {st.session_state.card_index + 1} / {len(words)} • Sonraki yazma pratiğine {kalan_yazma} kart kaldı")
 
-        # --- DURUM A: KLASİK KELİME KARTI ---
+        # --- DURUM A: KELİME KARTI ---
         if mode in ["EN_TO_TR", "TR_TO_EN"]:
             if mode == "EN_TO_TR":
                 badge_text = "🇬🇧 İngilizce ➔ 🇹🇷 Türkçe (Kelime)"
@@ -479,16 +450,16 @@ with tab1:
                 st.session_state.show_meaning = not st.session_state.show_meaning
                 st.rerun()
 
-        # --- DURUM B: CÜMLE ÇEVİRİSİ KARTI (HEDEF KELİME GİZLİ) ---
+        # --- DURUM B: HER 10 KELİMEDE BİR GELEN CÜMLE YAZMA KARTI ---
         else:
             if mode == "SENT_EN_TO_TR":
-                badge_text = "✍️ Cümle Çevirisi: 🇬🇧 İngilizce ➔ 🇹🇷 Türkçe"
-                instruction = "Aşağıdaki İngilizce cümleyi kurallı bir şekilde Türkçeye çevir:"
+                badge_text = "✍️ Cümle Çevirisi (10 Kartta 1): 🇬🇧 İngilizce ➔ 🇹🇷 Türkçe"
+                instruction = "Aşağıdaki İngilizce cümleyi Türkçeye çevir:"
                 source_sentence = current_word["ex_en"]
                 reference_text = current_word["ex_tr"]
             else:
-                badge_text = "✍️ Cümle Çevirisi: 🇹🇷 Türkçe ➔ 🇬🇧 İngilizce"
-                instruction = "Aşağıdaki Türkçe cümleyi kurallı bir şekilde İngilizceye çevir:"
+                badge_text = "✍️ Cümle Çevirisi (10 Kartta 1): 🇹🇷 Türkçe ➔ 🇬🇧 İngilizce"
+                instruction = "Aşağıdaki Türkçe cümleyi İngilizceye çevir:"
                 source_sentence = current_word["ex_tr"]
                 reference_text = current_word["ex_en"]
 
@@ -499,9 +470,9 @@ with tab1:
                 if st.button("🔊 Cümleyi Dinle", key="listen_ai_sent"):
                     st.audio(generate_audio(source_sentence), format="audio/mp3", autoplay=True)
 
-            st.text_area("Çevirini buraya yaz:", key=f"card_input_{st.session_state.card_index}", height=90, placeholder="Cümlenizi buraya yazabilirsiniz...")
+            st.text_area("Çevirini buraya yaz:", key=f"card_input_{st.session_state.cards_viewed_count}", height=85, placeholder="Cümlenizi buraya yazabilirsiniz...")
             
-            show_ref_key = f"show_ref_{st.session_state.card_index}"
+            show_ref_key = f"show_ref_{st.session_state.cards_viewed_count}"
             if show_ref_key not in st.session_state:
                 st.session_state[show_ref_key] = False
 
@@ -520,104 +491,175 @@ with tab1:
         c1, c2, c3 = st.columns(3)
         with c1:
             if st.button("⬅️ Önceki"):
-                reset_card_state((st.session_state.card_index - 1) % len(words), level)
+                reset_card_state((st.session_state.card_index - 1) % len(words))
                 st.rerun()
         with c2:
             if st.button("🎲 Rastgele"):
-                reset_card_state(random.randint(0, len(words) - 1), level)
+                reset_card_state(random.randint(0, len(words) - 1))
                 st.rerun()
         with c3:
             if st.button("Sonraki ➡️"):
-                reset_card_state((st.session_state.card_index + 1) % len(words), level)
+                reset_card_state((st.session_state.card_index + 1) % len(words))
                 st.rerun()
 
-# --- SEKME 2: MINI QUIZ ---
+# --- SEKME 2: 10 SORULUK MINI QUIZ ---
 with tab2:
-    st.markdown(f"### 🎯 {level} Seviyesi Hızlı Test")
-    st.caption(f"Toplam Skor: **{st.session_state.quiz_score} Doğru** / {st.session_state.quiz_total} Soru")
+    questions = st.session_state.quiz_questions
+    total_q = len(questions)
     
-    if st.session_state.quiz_question is None:
-        st.session_state.quiz_question = create_quiz_question(level)
+    # QUIZ TAMAMLANDIYSA SONUÇ EKRANI
+    if st.session_state.quiz_finished:
+        score = st.session_state.quiz_score
+        percent = int((score / total_q) * 100)
         
-    q = st.session_state.quiz_question
-    q_word = q["word"]
-    q_type = q["q_type"]
-    
-    # --- QUIZ DURUM A: ÇOKTAN SEÇMELİ KELİME ---
-    if q_type in ["EN_TO_TR", "TR_TO_EN"]:
-        if q_type == "EN_TO_TR":
-            q_badge = "🇬🇧 İngilizce ➔ 🇹🇷 Türkçe (Kelime)"
-            q_prompt = "Bu kelimenin Türkçe karşılığı nedir?"
-            q_display = q_word["en"]
+        if percent >= 80:
+            emoji_title = "🏆 Harika İş Çıkardın!"
+            msg = "Kelime bilgin çok sağlam görünüyor!"
+        elif percent >= 50:
+            emoji_title = "👍 Güzel Çaba!"
+            msg = "Biraz daha tekrarla mükemmel olacak."
         else:
-            q_badge = "🇹🇷 Türkçe ➔ 🇬🇧 İngilizce (Kelime)"
-            q_prompt = "Bu ifadenin İngilizce karşılığı nedir?"
-            q_display = q_word["tr"]
-        
-        quiz_card_html = f'<div class="word-card" style="padding: 20px;"><div class="lang-badge">{q_badge}</div><div style="font-size: 0.95rem; color: #52796F; font-weight: 600;">{q_prompt}</div><div class="word-main" style="font-size: 1.9rem; margin-top: 8px;">{q_display}</div></div>'
-        st.markdown(quiz_card_html, unsafe_allow_html=True)
-        
-        if q_type == "EN_TO_TR" or q["answered"]:
-            if st.button("🔊 İngilizce Telaffuzunu Dinle", key="quiz_audio"):
-                st.audio(generate_audio(q_word["en"]), format="audio/mp3", autoplay=True)
-            
-        st.write("")
-        for idx, opt in enumerate(q["options"]):
-            if st.button(opt, key=f"opt_{idx}", disabled=q["answered"]):
-                q["answered"] = True
-                q["selected"] = opt
-                st.session_state.quiz_total += 1
-                if opt == q["correct_answer"]:
-                    st.session_state.quiz_score += 1
-                st.rerun()
-                
-        if q["answered"]:
-            if q["selected"] == q["correct_answer"]:
-                st.success(f"🎉 Harika! Doğru cevap: **{q['correct_answer']}**")
-            else:
-                st.error(f"❌ Yanlış! Senin seçimin: {q['selected']} | Doğru cevap: **{q['correct_answer']}**")
-                
-            if q_word.get("ex_en"):
-                st.info(f"💡 **Örnek Cümle:** {q_word['ex_en']}\n\n*{q_word.get('ex_tr', '')}*")
-                
-            if st.button("Sonraki Soruya Geç ➡️", key="next_quiz_mc"):
-                st.session_state.quiz_question = create_quiz_question(level)
-                st.rerun()
+            emoji_title = "📚 Tekrar Zamanı!"
+            msg = "Kelime kartlarına biraz daha göz atıp tekrar deneyebilirsin."
 
-    # --- QUIZ DURUM B: YAZMA / CÜMLE ÇEVİRİSİ SORUSU ---
+        st.markdown(f"""
+        <div class="score-box">
+            <div style="font-size: 1.4rem; font-weight: 700; color: #2D6A4F;">{emoji_title}</div>
+            <div class="score-big">{score} / {total_q}</div>
+            <div style="font-size: 1.15rem; font-weight: 600; color: #1B4332;">Başarı Oranı: %{percent}</div>
+            <p style="margin-top: 10px;">{msg}</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        if st.button("🔄 Yeni 10 Soruluk Quiz Başlat", key="restart_quiz"):
+            init_quiz_session(level)
+            st.rerun()
+
+    # QUIZ DEVAM EDİYORSA
     else:
-        if q_type == "SENT_EN_TO_TR":
-            q_badge = "✍️ Yazma Sorusu: 🇬🇧 İngilizce ➔ 🇹🇷 Türkçe"
-            q_prompt = "Bu İngilizce cümleyi kurallı bir şekilde Türkçeye çevir:"
+        idx = st.session_state.quiz_current_idx
+        q = questions[idx]
+        q_word = q["word"]
+        q_type = q["q_type"]
+        
+        st.progress((idx + 1) / total_q)
+        st.caption(f"Soru **{idx + 1} / {total_q}** • Mevcut Doğru Sayısı: **{st.session_state.quiz_score}**")
+        
+        # --- DURUM A: ÇOKTAN SEÇMELİ KELİME ---
+        if q_type in ["EN_TO_TR", "TR_TO_EN"]:
+            if q_type == "EN_TO_TR":
+                q_badge = "🇬🇧 İngilizce ➔ 🇹🇷 Türkçe (Kelime)"
+                q_prompt = "Bu kelimenin Türkçe karşılığı nedir?"
+                q_display = q_word["en"]
+            else:
+                q_badge = "🇹🇷 Türkçe ➔ 🇬🇧 İngilizce (Kelime)"
+                q_prompt = "Bu ifadenin İngilizce karşılığı nedir?"
+                q_display = q_word["tr"]
+            
+            quiz_card_html = f'<div class="word-card" style="padding: 20px;"><div class="lang-badge">{q_badge}</div><div style="font-size: 0.95rem; color: #52796F; font-weight: 600;">{q_prompt}</div><div class="word-main" style="font-size: 1.9rem; margin-top: 8px;">{q_display}</div></div>'
+            st.markdown(quiz_card_html, unsafe_allow_html=True)
+            
+            if q_type == "EN_TO_TR" or q["answered"]:
+                if st.button("🔊 İngilizce Telaffuzunu Dinle", key=f"quiz_audio_{idx}"):
+                    st.audio(generate_audio(q_word["en"]), format="audio/mp3", autoplay=True)
+                
+            st.write("")
+            for opt_i, opt in enumerate(q["options"]):
+                if st.button(opt, key=f"q_{idx}_opt_{opt_i}", disabled=q["answered"]):
+                    q["answered"] = True
+                    q["selected"] = opt
+                    if opt == q["correct_answer"]:
+                        q["is_correct"] = True
+                        st.session_state.quiz_score += 1
+                    else:
+                        q["is_correct"] = False
+                    st.rerun()
+                    
+            if q["answered"]:
+                if q["is_correct"]:
+                    st.success(f"✅ Doğru! Cevap: **{q['correct_answer']}**")
+                else:
+                    st.error(f"❌ Yanlış! Senin seçimin: {q['selected']} | Doğru cevap: **{q['correct_answer']}**")
+                    
+                if q_word.get("ex_en"):
+                    st.info(f"💡 **Örnek Cümle:** {q_word['ex_en']}\n\n*{q_word.get('ex_tr', '')}*")
+                    
+                next_label = "Sonuçları Gör 🏁" if idx == total_q - 1 else "Sonraki Soruya Geç ➡️"
+                if st.button(next_label, key=f"next_mc_{idx}"):
+                    if idx == total_q - 1:
+                        st.session_state.quiz_finished = True
+                    else:
+                        st.session_state.quiz_current_idx += 1
+                    st.rerun()
+
+        # --- DURUM B: CÜMLE YAZMA SORUSU (SADECE 5. VE 10. SORULAR) ---
         else:
-            q_badge = "✍️ Yazma Sorusu: 🇹🇷 Türkçe ➔ 🇬🇧 İngilizce"
-            q_prompt = "Bu Türkçe cümleyi kurallı bir şekilde İngilizceye çevir:"
+            if q_type == "SENT_EN_TO_TR":
+                q_badge = "✍️ Cümle Çevirisi: 🇬🇧 İngilizce ➔ 🇹🇷 Türkçe"
+                q_prompt = "Bu İngilizce cümleyi Türkçeye çevir:"
+            else:
+                q_badge = "✍️ Cümle Çevirisi: 🇹🇷 Türkçe ➔ 🇬🇧 İngilizce"
+                q_prompt = "Bu Türkçe cümleyi İngilizceye çevir:"
 
-        quiz_card_html = f'<div class="word-card" style="padding: 20px;"><div class="lang-badge">{q_badge}</div><div style="font-size: 0.95rem; color: #52796F; font-weight: 600; margin-top:4px;">{q_prompt}</div><div class="sentence-main">"{q["source_sentence"]}"</div></div>'
-        st.markdown(quiz_card_html, unsafe_allow_html=True)
+            quiz_card_html = f'<div class="word-card" style="padding: 20px;"><div class="lang-badge">{q_badge}</div><div style="font-size: 0.95rem; color: #52796F; font-weight: 600; margin-top:4px;">{q_prompt}</div><div class="sentence-main">"{q["source_sentence"]}"</div></div>'
+            st.markdown(quiz_card_html, unsafe_allow_html=True)
 
-        if q_type == "SENT_EN_TO_TR":
-            if st.button("🔊 Cümleyi Dinle", key="quiz_sent_audio"):
-                st.audio(generate_audio(q["source_sentence"]), format="audio/mp3", autoplay=True)
+            if q_type == "SENT_EN_TO_TR":
+                if st.button("🔊 Cümleyi Dinle", key=f"quiz_sent_audio_{idx}"):
+                    st.audio(generate_audio(q["source_sentence"]), format="audio/mp3", autoplay=True)
 
-        st.text_area("Çevirini buraya yaz:", key=f"quiz_input_{st.session_state.quiz_total}", height=90, disabled=q["answered"])
+            user_ans = st.text_area("Çevirini buraya yaz:", value=q["user_input"], key=f"quiz_txt_{idx}", height=85, disabled=q["answered"])
 
-        if not q["answered"]:
-            if st.button("👀 Doğru Cevabı Gör ve Puan Ver", key="submit_quiz_manual"):
-                q["answered"] = True
-                st.session_state.quiz_total += 1
-                st.session_state.quiz_score += 1
-                st.rerun()
+            if not q["answered"]:
+                if st.button("👀 Cevabı Kontrol Et", key=f"check_sent_{idx}"):
+                    q["user_input"] = user_ans
+                    q["answered"] = True
+                    # Yazılan cümle boşsa veya benzerlik çok düşükse otomatik yanlış işaretle
+                    sim = check_sentence_similarity(user_ans, q["reference_translation"])
+                    if not user_ans.strip() or sim < 0.45:
+                        q["is_correct"] = False
+                    else:
+                        q["is_correct"] = True
+                        st.session_state.quiz_score += 1
+                    st.rerun()
 
-        if q["answered"]:
-            st.info(f"💡 **Örnek Doğru Cevap:**\n\n{q['reference_translation']}\n\n🎯 **Test Edilen Kelime:** {q_word['en']} ({q_word['tr']})")
-            if q_type == "SENT_TR_TO_EN":
-                if st.button("🔊 Doğru İngilizce Cümleyi Dinle", key="listen_ideal_quiz"):
-                    st.audio(generate_audio(q["reference_translation"]), format="audio/mp3", autoplay=True)
+            if q["answered"]:
+                if q["is_correct"]:
+                    st.success("✅ Doğru / Çok Yakın Çeviri!")
+                else:
+                    if not q["user_input"].strip():
+                        st.error("❌ Yanlış! Herhangi bir çeviri yazmadınız.")
+                    else:
+                        st.error("❌ Yanlış / Eksik Çeviri! Aşağıdaki doğru örnekle karşılaştırabilirsiniz.")
 
-            if st.button("Sonraki Soruya Geç ➡️", key="next_quiz_manual"):
-                st.session_state.quiz_question = create_quiz_question(level)
-                st.rerun()
+                st.info(f"💡 **Örnek Doğru Cevap:**\n\n{q['reference_translation']}\n\n🎯 **Test Edilen Kelime:** {q_word['en']} ({q_word['tr']})")
+                
+                # Kullanıcı kendi değerlendirmesini düzeltmek isterse diye opsiyonel buton
+                col_fix1, col_fix2 = st.columns(2)
+                with col_fix1:
+                    if not q["is_correct"]:
+                        if st.button("Aslında Doğru Yazdım (+1 Puan)", key=f"override_true_{idx}"):
+                            q["is_correct"] = True
+                            st.session_state.quiz_score += 1
+                            st.rerun()
+                with col_fix2:
+                    if q["is_correct"]:
+                        if st.button("Aslında Yanlış Yazdım (-1 Puan)", key=f"override_false_{idx}"):
+                            q["is_correct"] = False
+                            st.session_state.quiz_score -= 1
+                            st.rerun()
+
+                if q_type == "SENT_TR_TO_EN":
+                    if st.button("🔊 Doğru İngilizce Cümleyi Dinle", key=f"listen_ideal_quiz_{idx}"):
+                        st.audio(generate_audio(q["reference_translation"]), format="audio/mp3", autoplay=True)
+
+                next_label = "Sonuçları Gör 🏁" if idx == total_q - 1 else "Sonraki Soruya Geç ➡️"
+                if st.button(next_label, key=f"next_sent_{idx}"):
+                    if idx == total_q - 1:
+                        st.session_state.quiz_finished = True
+                    else:
+                        st.session_state.quiz_current_idx += 1
+                    st.rerun()
 
 # --- SEKME 3: YENİ KELİME EKLEME MENÜSÜ ---
 with tab3:
