@@ -14,7 +14,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Özel CSS Tasarımı (Mobil odaklı sıkılaştırılmış yerleşim)
+# Özel CSS Tasarımı (Dikey mobil ekranda sütunları yan yana zorlayan yapı)
 st.markdown("""
 <style>
     .stApp {
@@ -23,101 +23,101 @@ st.markdown("""
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
     .block-container {
-        padding-top: 1.1rem !important;
-        padding-bottom: 1.5rem !important;
-        padding-left: 0.9rem !important;
-        padding-right: 0.9rem !important;
+        padding-top: 1.05rem !important;
+        padding-bottom: 1.4rem !important;
+        padding-left: 0.75rem !important;
+        padding-right: 0.75rem !important;
         max-width: 640px !important;
     }
     .main-title {
         color: #1B4332 !important;
         text-align: center;
         font-weight: 800;
-        font-size: 1.55rem;
+        font-size: 1.5rem;
         margin-bottom: 0rem;
         line-height: 1.2;
     }
     .sub-title {
         color: #2D6A4F !important;
         text-align: center;
-        font-size: 0.82rem;
+        font-size: 0.8rem;
         font-weight: 500;
-        margin-bottom: 0.55rem;
+        margin-bottom: 0.5rem;
     }
     p, label, .stCaption, div[data-testid="stCaptionContainer"] {
         color: #2D6A4F !important;
         font-weight: 500;
     }
     div[data-testid="stAlert"] {
-        padding: 0.45rem 0.75rem !important;
-        margin-top: 0.35rem !important;
-        margin-bottom: 0.55rem !important;
+        padding: 0.4rem 0.7rem !important;
+        margin-top: 0.3rem !important;
+        margin-bottom: 0.5rem !important;
         border-radius: 10px !important;
     }
     .word-card {
         background-color: #FFFFFF !important;
         border-radius: 16px;
-        padding: 16px 14px;
+        padding: 15px 12px;
         box-shadow: 0 6px 18px rgba(27, 67, 50, 0.09);
         border-top: 5px solid #2D6A4F;
         text-align: center;
-        margin-bottom: 10px;
+        margin-bottom: 8px;
     }
     .lang-badge {
         display: inline-block;
         background-color: #EBF5EE;
         color: #2D6A4F !important;
-        font-size: 0.74rem;
+        font-size: 0.72rem;
         font-weight: 700;
-        padding: 2px 10px;
+        padding: 2px 9px;
         border-radius: 14px;
-        margin-bottom: 6px;
+        margin-bottom: 5px;
         border: 1px solid #B7E4C7;
     }
     .word-main {
         color: #1B4332 !important;
-        font-size: 1.55rem;
+        font-size: 1.5rem;
         font-weight: 700;
-        margin-bottom: 6px;
-        line-height: 1.25;
+        margin-bottom: 5px;
+        line-height: 1.22;
     }
     .sentence-main {
         color: #1B4332 !important;
-        font-size: 1.12rem;
+        font-size: 1.08rem;
         font-weight: 600;
-        margin: 8px 0;
-        line-height: 1.38;
+        margin: 6px 0;
+        line-height: 1.35;
     }
     .word-answer {
         color: #1B4332 !important;
-        font-size: 1.12rem;
+        font-size: 1.08rem;
         font-weight: 700;
         background-color: #D8F3DC !important;
-        padding: 7px 14px;
+        padding: 6px 12px;
         border-radius: 10px;
         display: inline-block;
-        margin-top: 6px;
+        margin-top: 5px;
     }
     .example-box {
         background-color: #EBF5EE !important;
         border-left: 4px solid #2D6A4F;
-        padding: 10px 12px;
+        padding: 9px 11px;
         border-radius: 8px;
         text-align: left;
-        margin-top: 10px;
+        margin-top: 8px;
     }
     .example-en {
         color: #1B4332 !important;
-        font-size: 0.92rem;
+        font-size: 0.9rem;
         font-weight: 600;
         font-style: italic;
-        line-height: 1.35;
+        line-height: 1.32;
     }
     .example-tr {
         color: #40916C !important;
-        font-size: 0.85rem;
+        font-size: 0.83rem;
         margin-top: 3px;
-        line-height: 1.3;
+        line-height: 1.28;
     }
     .score-box {
         background-color: #FFFFFF !important;
@@ -139,18 +139,20 @@ st.markdown("""
         color: #FFFFFF !important;
         border: none !important;
         border-radius: 10px !important;
-        padding: 0.42rem 0.65rem !important;
+        padding: 0.38rem 0.45rem !important;
         font-weight: 600 !important;
-        font-size: 0.88rem !important;
+        font-size: 0.84rem !important;
         transition: all 0.15s ease-in-out !important;
         width: 100%;
-        min-height: 2.35rem !important;
+        min-height: 2.3rem !important;
         box-shadow: 0 3px 6px rgba(45, 106, 79, 0.18) !important;
+        white-space: nowrap !important;
     }
     div.stButton > button p {
         color: #FFFFFF !important;
-        font-size: 0.86rem !important;
-        line-height: 1.2 !important;
+        font-size: 0.82rem !important;
+        line-height: 1.15 !important;
+        white-space: nowrap !important;
     }
     div.stButton > button:hover {
         background-color: #1B4332 !important;
@@ -164,28 +166,31 @@ st.markdown("""
         color: #1B4332 !important;
         border: 2px solid #74C69D !important;
         border-radius: 10px !important;
-        font-size: 0.95rem !important;
+        font-size: 0.92rem !important;
     }
     .stTabs [data-baseweb="tab-list"] {
-        gap: 5px;
+        gap: 4px;
         justify-content: center;
-        flex-wrap: wrap;
+        flex-wrap: nowrap !important;
+        overflow-x: auto;
         border-bottom: 1px solid #B7E4C7;
         padding-bottom: 5px;
-        margin-bottom: 0.4rem;
+        margin-bottom: 0.35rem;
     }
     .stTabs [data-baseweb="tab"] {
         background-color: #D8F3DC !important;
         border-radius: 8px !important;
         color: #1B4332 !important;
         font-weight: 700 !important;
-        padding: 5px 10px !important;
+        padding: 5px 8px !important;
         border: 1px solid #95D5B2 !important;
+        flex: 1 1 auto !important;
     }
     .stTabs [data-baseweb="tab"] p {
         color: #1B4332 !important;
         font-weight: 700 !important;
-        font-size: 0.8rem !important;
+        font-size: 0.76rem !important;
+        white-space: nowrap !important;
     }
     .stTabs [aria-selected="true"] {
         background-color: #2D6A4F !important;
@@ -198,7 +203,30 @@ st.markdown("""
         background-color: #1B4332 !important;
     }
     div[data-testid="stHorizontalBlock"] {
-        gap: 0.4rem !important;
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        gap: 0.35rem !important;
+        align-items: stretch !important;
+        margin-bottom: 0.35rem !important;
+    }
+    div[data-testid="stHorizontalBlock"] > div[data-testid="column"] {
+        flex: 1 1 0% !important;
+        min-width: 0 !important;
+        width: auto !important;
+    }
+
+    /* Dikey telefon ekranları için ekstra sıkılaştırma */
+    @media (max-width: 640px) {
+        div.stButton > button {
+            padding: 0.35rem 0.25rem !important;
+            font-size: 0.78rem !important;
+            min-height: 2.15rem !important;
+        }
+        div.stButton > button p {
+            font-size: 0.76rem !important;
+            letter-spacing: -0.2px;
+        }
     }
 </style>
 """, unsafe_allow_html=True)
@@ -433,7 +461,7 @@ with tab1:
                 answer_text = current_word["en"]
                 hint_text = "İngilizcesini görmek için butona bas 👇"
 
-            answer_html = f'<div class="word-answer">{answer_text}</div>' if st.session_state.show_meaning else f'<div style="color:#52796F; font-size:0.88rem; margin-top:6px;">{hint_text}</div>'
+            answer_html = f'<div class="word-answer">{answer_text}</div>' if st.session_state.show_meaning else f'<div style="color:#52796F; font-size:0.86rem; margin-top:5px;">{hint_text}</div>'
             
             example_html = ""
             if current_word.get("ex_en"):
@@ -447,9 +475,9 @@ with tab1:
             card_html = f'<div class="word-card"><div class="lang-badge">{badge_text}</div><div class="word-main">{question_text}</div>{answer_html}{example_html}</div>'
             st.markdown(card_html, unsafe_allow_html=True)
 
-            # Ana aksiyon butonları yan yana: Cevap + Rastgele + Sonraki
+            # 1. Satır: Cevap + Rastgele + Sonraki
             btn_label = "🙈 Gizle" if st.session_state.show_meaning else "👀 Cevap"
-            a1, a2, a3 = st.columns([1.2, 1, 1])
+            a1, a2, a3 = st.columns([1, 1.05, 1.05])
             with a1:
                 if st.button(btn_label, key="toggle_meaning"):
                     st.session_state.show_meaning = not st.session_state.show_meaning
@@ -463,7 +491,7 @@ with tab1:
                     reset_card_state((st.session_state.card_index + 1) % len(words))
                     st.rerun()
 
-            # İkincil butonlar yan yana: Önceki + Sesler
+            # 2. Satır: Önceki + Kelime + Cümle
             b1, b2, b3 = st.columns([1, 1, 1])
             with b1:
                 if st.button("⬅️ Önceki", key="prev_row"):
@@ -491,17 +519,17 @@ with tab1:
                 source_sentence = current_word["ex_tr"]
                 reference_text = current_word["ex_en"]
 
-            card_html = f'<div class="word-card"><div class="lang-badge">{badge_text}</div><div style="font-size:0.84rem; color:#52796F; font-weight:600;">{instruction}</div><div class="sentence-main">"{source_sentence}"</div></div>'
+            card_html = f'<div class="word-card"><div class="lang-badge">{badge_text}</div><div style="font-size:0.82rem; color:#52796F; font-weight:600;">{instruction}</div><div class="sentence-main">"{source_sentence}"</div></div>'
             st.markdown(card_html, unsafe_allow_html=True)
 
-            st.text_area("Çevirin:", key=f"card_input_{st.session_state.cards_viewed_count}", height=70, placeholder="Çevirini buraya yaz...")
+            st.text_area("Çevirin:", key=f"card_input_{st.session_state.cards_viewed_count}", height=68, placeholder="Çevirini buraya yaz...")
 
             show_ref_key = f"show_ref_{st.session_state.cards_viewed_count}"
             if show_ref_key not in st.session_state:
                 st.session_state[show_ref_key] = False
 
             btn_ref_label = "🙈 Gizle" if st.session_state[show_ref_key] else "👀 Cevap"
-            c_top1, c_top2, c_top3 = st.columns([1.2, 1, 1])
+            c_top1, c_top2, c_top3 = st.columns([1, 1.05, 1.05])
             with c_top1:
                 if st.button(btn_ref_label, key="btn_toggle_ref"):
                     st.session_state[show_ref_key] = not st.session_state[show_ref_key]
@@ -569,10 +597,9 @@ with tab2:
                 q_prompt = "İngilizce karşılığı nedir?"
                 q_display = q_word["tr"]
             
-            quiz_card_html = f'<div class="word-card" style="padding: 14px 12px;"><div class="lang-badge">{q_badge}</div><div style="font-size: 0.85rem; color: #52796F; font-weight: 600;">{q_prompt}</div><div class="word-main" style="font-size: 1.55rem; margin-top: 4px;">{q_display}</div></div>'
+            quiz_card_html = f'<div class="word-card" style="padding: 13px 11px;"><div class="lang-badge">{q_badge}</div><div style="font-size: 0.84rem; color: #52796F; font-weight: 600;">{q_prompt}</div><div class="word-main" style="font-size: 1.5rem; margin-top: 4px;">{q_display}</div></div>'
             st.markdown(quiz_card_html, unsafe_allow_html=True)
 
-            # 2x2 şık yerleşimi (daha kompakt)
             r1_c1, r1_c2 = st.columns(2)
             r2_c1, r2_c2 = st.columns(2)
             grid_slots = [r1_c1, r1_c2, r2_c1, r2_c2]
@@ -595,12 +622,12 @@ with tab2:
                 else:
                     st.error(f"❌ Yanlış! Seçimin: {q['selected']} | Doğru: **{q['correct_answer']}**")
 
-                act_q1, act_q2 = st.columns([1, 1.4])
+                act_q1, act_q2 = st.columns([1, 1.3])
                 with act_q1:
                     if st.button("🔊 Dinle", key=f"quiz_audio_{idx}"):
                         st.audio(generate_audio(q_word["en"]), format="audio/mp3", autoplay=True)
                 with act_q2:
-                    next_label = "Sonuçları Gör 🏁" if idx == total_q - 1 else "Sonraki Soru ➡️"
+                    next_label = "Sonuçlar 🏁" if idx == total_q - 1 else "Sonraki ➡️"
                     if st.button(next_label, key=f"next_mc_{idx}"):
                         if idx == total_q - 1:
                             st.session_state.quiz_finished = True
@@ -616,10 +643,10 @@ with tab2:
                 q_badge = "✍️ Yazma • 🇹🇷 ➔ 🇬🇧"
                 q_prompt = "İngilizceye çevir:"
 
-            quiz_card_html = f'<div class="word-card" style="padding: 14px 12px;"><div class="lang-badge">{q_badge}</div><div style="font-size: 0.85rem; color: #52796F; font-weight: 600;">{q_prompt}</div><div class="sentence-main">"{q["source_sentence"]}"</div></div>'
+            quiz_card_html = f'<div class="word-card" style="padding: 13px 11px;"><div class="lang-badge">{q_badge}</div><div style="font-size: 0.84rem; color: #52796F; font-weight: 600;">{q_prompt}</div><div class="sentence-main">"{q["source_sentence"]}"</div></div>'
             st.markdown(quiz_card_html, unsafe_allow_html=True)
 
-            user_ans = st.text_area("Çevirin:", value=q["user_input"], key=f"quiz_txt_{idx}", height=70, disabled=q["answered"])
+            user_ans = st.text_area("Çevirin:", value=q["user_input"], key=f"quiz_txt_{idx}", height=68, disabled=q["answered"])
 
             if not q["answered"]:
                 if st.button("👀 Kontrol Et", key=f"check_sent_{idx}"):
@@ -641,7 +668,7 @@ with tab2:
 
                 st.info(f"💡 **Örnek:** {q['reference_translation']}\n\n🎯 **Kelime:** {q_word['en']} ({q_word['tr']})")
 
-                q_act1, q_act2, q_act3 = st.columns([1, 1, 1.2])
+                q_act1, q_act2, q_act3 = st.columns([1, 1, 1.15])
                 with q_act1:
                     if not q["is_correct"]:
                         if st.button("+1 Puan", key=f"override_true_{idx}"):
