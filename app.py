@@ -205,6 +205,21 @@ INITIAL_DATA = {
     ]
 }
 
+def merge_with_initial_data(loaded):
+    merged = {}
+    for lvl in ["B1", "B2"]:
+        base_items = INITIAL_DATA.get(lvl, [])
+        loaded_items = loaded.get(lvl, []) if isinstance(loaded, dict) else []
+        seen_en = {item.get("en", "").strip().lower() for item in base_items if item.get("en")}
+        combined = list(base_items)
+        for item in loaded_items:
+            en_key = item.get("en", "").strip().lower()
+            if en_key and en_key not in seen_en:
+                combined.append(item)
+                seen_en.add(en_key)
+        merged[lvl] = combined
+    return merged
+
 def load_words():
     if not os.path.exists(DATA_FILE):
         with open(DATA_FILE, "w", encoding="utf-8") as f:
@@ -213,9 +228,10 @@ def load_words():
     try:
         with open(DATA_FILE, "r", encoding="utf-8") as f:
             data = json.load(f)
-            if len(data.get("B1", [])) < 3 or len(data.get("B2", [])) < 3:
-                return INITIAL_DATA
-            return data
+            merged = merge_with_initial_data(data)
+            if merged != data:
+                save_words(merged)
+            return merged
     except Exception:
         return INITIAL_DATA
 
