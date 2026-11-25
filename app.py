@@ -2,7 +2,6 @@ import streamlit as st
 import json
 import os
 import random
-import difflib
 from io import BytesIO
 from gtts import gTTS
 
@@ -67,23 +66,6 @@ st.markdown("""
         margin-bottom: 8px;
         line-height: 1.3;
     }
-    .sentence-main {
-        color: #1B4332 !important;
-        font-size: 1.25rem;
-        font-weight: 600;
-        margin: 12px 0;
-        line-height: 1.45;
-    }
-    .word-answer {
-        color: #1B4332 !important;
-        font-size: 1.3rem;
-        font-weight: 700;
-        background-color: #D8F3DC !important;
-        padding: 10px 18px;
-        border-radius: 12px;
-        display: inline-block;
-        margin-top: 8px;
-    }
     .example-box {
         background-color: #EBF5EE !important;
         border-left: 5px solid #2D6A4F;
@@ -102,21 +84,6 @@ st.markdown("""
         color: #40916C !important;
         font-size: 0.92rem;
         margin-top: 5px;
-    }
-    .score-box {
-        background-color: #FFFFFF !important;
-        border-radius: 20px;
-        padding: 28px 20px;
-        box-shadow: 0 8px 24px rgba(27, 67, 50, 0.12);
-        border: 2px solid #2D6A4F;
-        text-align: center;
-        margin: 16px 0;
-    }
-    .score-big {
-        font-size: 2.8rem;
-        font-weight: 800;
-        color: #1B4332 !important;
-        margin: 8px 0;
     }
     div.stButton > button {
         background-color: #2D6A4F !important;
@@ -140,7 +107,7 @@ st.markdown("""
         background-color: #A3B18A !important;
         opacity: 0.75;
     }
-    .stTextInput input, .stTextArea textarea {
+    .stTextInput input {
         background-color: #FFFFFF !important;
         color: #1B4332 !important;
         border: 2px solid #74C69D !important;
@@ -234,7 +201,7 @@ INITIAL_DATA = {
         {"en": "Conducive", "tr": "elverişli, uygun", "ex_en": "A quiet room is more conducive to studying.", "ex_tr": "Sessiz bir oda ders çalışmak için daha elverişlidir."},
         {"en": "Pertinent", "tr": "ilgili, alakalı", "ex_en": "Please ask questions that are pertinent to the topic.", "ex_tr": "Lütfen konuyla alakalı sorular sorun."},
         {"en": "Plausible", "tr": "makul, akla yatkın", "ex_en": "Her explanation sounded completely plausible.", "ex_tr": "Açıklaması kulağa tamamen akla yatkın geliyordu."},
-        {"en": "Compelling", "tr": "ikna edici, sürükleyici", "ex_en": "The lawyer presented a compelling argument.", "ex_tr": "Avukat ikna edici bir argüman sundu."}
+        {"en": "Compelling", "tr": "ikna edici, sürükleyici", "ex_tr": "The lawyer presented a compelling argument.", "ex_tr": "Avukat ikna edici bir argüman sundu."}
     ]
 }
 
@@ -246,7 +213,7 @@ def load_words():
     try:
         with open(DATA_FILE, "r", encoding="utf-8") as f:
             data = json.load(f)
-            if len(data.get("B1", [])) < 4 or len(data.get("B2", [])) < 4:
+            if len(data.get("B1", [])) < 3 or len(data.get("B2", [])) < 3:
                 return INITIAL_DATA
             return data
     except Exception:
@@ -265,12 +232,42 @@ def generate_audio(text):
     fp.seek(0)
     return fp.read()
 
-def check_sentence_similarity(user_text, ref_text):
-    u = "".join(c.lower() for c in user_text if c.isalnum() or c.isspace()).split()
-    r = "".join(c.lower() for c in ref_text if c.isalnum() or c.isspace()).split()
-    if not u:
-        return 0.0
-    return difflib.SequenceMatcher(None, " ".join(u), " ".join(r)).ratio()
+# --- KARIŞIK SIRALAMA VE 3 SEÇENEKLİ KART OLUŞTURUCU ---
+def build_shuffled_deck(level):
+    word_list = st.session_state.words_db[level]
+    shuffled_words = random.sample(word_list, len(word_list))
+    deck = []
+
+    for target in shuffled_words:
+        direction = random.choice(["EN_TO_TR", "TR_TO_EN"])
+        if direction == "EN_TO_TR":
+            wrong_pool = [w["tr"] for w in word_list if w["tr"] != target["tr"]]
+            wrong_choices = random.sample(wrong_pool, min(2, len(wrong_pool)))
+            correct_answer = target["tr"]
+        else:
+            wrong_pool = [w["en"] for w in word_list if w["en"] != target["en"]]
+            wrong_choices = random.sample(wrong_pool, min(2, len(wrong_pool)))
+            correct_answer = target["en"]
+
+        options = wrong_choices + [correct_answer]
+        random.shuffle(options)
+
+        deck.append({
+            "word": target,
+            "direction": direction,
+            "correct_answer": correct_answer,
+            "options": options,
+            "answered": False,
+            "selected": None,
+            "is_correct": None
+        })
+
+    return deck
+
+def init_level_deck(level):
+    st.session_state.deck = build_shuffled_deck(level)
+    st.session_state.deck_pos = 0
+    st.session_state.round_number = st.session_state.get("round_number", 1)
 
 # --- SESSION STATE YÖNETİMİ ---
 if "words_db" not in st.session_state:
@@ -279,101 +276,28 @@ if "words_db" not in st.session_state:
 if "current_level" not in st.session_state:
     st.session_state.current_level = "B1"
 
-if "card_index" not in st.session_state:
-    st.session_state.card_index = 0
+if "round_number" not in st.session_state:
+    st.session_state.round_number = 1
 
-if "cards_viewed_count" not in st.session_state:
-    st.session_state.cards_viewed_count = 1
-
-if "card_mode" not in st.session_state:
-    st.session_state.card_mode = "EN_TO_TR"
-
-if "show_meaning" not in st.session_state:
-    st.session_state.show_meaning = False
-
-def get_next_card_mode(count):
-    if count % 10 == 0:
-        return random.choice(["SENT_EN_TO_TR", "SENT_TR_TO_EN"])
-    return random.choice(["EN_TO_TR", "TR_TO_EN"])
-
-def reset_card_state(new_index):
-    st.session_state.card_index = new_index
-    st.session_state.show_meaning = False
-    st.session_state.cards_viewed_count += 1
-    st.session_state.card_mode = get_next_card_mode(st.session_state.cards_viewed_count)
-
-def init_quiz_session(level):
-    word_list = st.session_state.words_db[level]
-    sample_size = min(10, len(word_list))
-    selected_words = random.sample(word_list, sample_size)
-    
-    questions = []
-    for idx, target in enumerate(selected_words):
-        if idx in [4, 9]:
-            q_type = random.choice(["SENT_EN_TO_TR", "SENT_TR_TO_EN"])
-            source_sent = target["ex_en"] if q_type == "SENT_EN_TO_TR" else target["ex_tr"]
-            ref_trans = target["ex_tr"] if q_type == "SENT_EN_TO_TR" else target["ex_en"]
-            questions.append({
-                "word": target,
-                "q_type": q_type,
-                "source_sentence": source_sent,
-                "reference_translation": ref_trans,
-                "answered": False,
-                "is_correct": None,
-                "user_input": ""
-            })
-        else:
-            q_type = random.choice(["EN_TO_TR", "TR_TO_EN"])
-            if q_type == "EN_TO_TR":
-                wrong_pool = [w["tr"] for w in word_list if w["en"] != target["en"]]
-                wrong_choices = random.sample(wrong_pool, min(3, len(wrong_pool)))
-                correct_answer = target["tr"]
-            else:
-                wrong_pool = [w["en"] for w in word_list if w["tr"] != target["tr"]]
-                wrong_choices = random.sample(wrong_pool, min(3, len(wrong_pool)))
-                correct_answer = target["en"]
-            options = wrong_choices + [correct_answer]
-            random.shuffle(options)
-            questions.append({
-                "word": target,
-                "q_type": q_type,
-                "correct_answer": correct_answer,
-                "options": options,
-                "answered": False,
-                "selected": None,
-                "is_correct": None
-            })
-            
-    st.session_state.quiz_questions = questions
-    st.session_state.quiz_current_idx = 0
-    st.session_state.quiz_score = 0
-    st.session_state.quiz_finished = False
-
-if "quiz_questions" not in st.session_state:
-    init_quiz_session(st.session_state.current_level)
+if "deck" not in st.session_state:
+    init_level_deck(st.session_state.current_level)
 
 # --- ARAYÜZ BAŞLANGICI ---
 st.markdown('<div class="main-title">🌿 VocabMaster</div>', unsafe_allow_html=True)
-st.markdown('<div class="sub-title">B1 & B2 İnteraktif Kelime ve Cümle Pratiği</div>', unsafe_allow_html=True)
+st.markdown('<div class="sub-title">B1 & B2 Kelime Pratiği</div>', unsafe_allow_html=True)
 
 col_lvl1, col_lvl2 = st.columns(2)
 with col_lvl1:
     if st.button("📘 B1 Seviyesi (" + str(len(st.session_state.words_db["B1"])) + " Kelime)"):
         st.session_state.current_level = "B1"
-        st.session_state.card_index = 0
-        st.session_state.cards_viewed_count = 1
-        st.session_state.card_mode = "EN_TO_TR"
-        st.session_state.show_meaning = False
-        init_quiz_session("B1")
+        st.session_state.round_number += 1
+        init_level_deck("B1")
         st.rerun()
 with col_lvl2:
     if st.button("📗 B2 Seviyesi (" + str(len(st.session_state.words_db["B2"])) + " Kelime)"):
         st.session_state.current_level = "B2"
-        st.session_state.card_index = 0
-        st.session_state.cards_viewed_count = 1
-        st.session_state.card_mode = "EN_TO_TR"
-        st.session_state.show_meaning = False
-        init_quiz_session("B2")
+        st.session_state.round_number += 1
+        init_level_deck("B2")
         st.rerun()
 
 level = st.session_state.current_level
@@ -381,277 +305,99 @@ words = st.session_state.words_db[level]
 
 st.info(f"Şu an seçili kur: **{level} Seviyesi**")
 
-tab1, tab2, tab3, tab4 = st.tabs(["🗂️ Kelime Kartları", "🎯 10 Soruluk Quiz", "➕ Yeni Kelime Ekle", "📋 Tüm Liste"])
+tab1, tab2, tab3 = st.tabs(["🗂️ Kelimeler", "➕ Yeni Kelime Ekle", "📋 Tüm Liste"])
 
-# --- SEKME 1: KELİME KARTLARI ---
+# --- SEKME 1: 3 SEÇENEKLİ KARIŞIK KELİME KARTLARI ---
 with tab1:
-    if len(words) > 0:
-        if st.session_state.card_index >= len(words):
-            st.session_state.card_index = 0
-            
-        current_word = words[st.session_state.card_index]
-        mode = st.session_state.card_mode
-        
-        progress = (st.session_state.card_index + 1) / len(words)
-        st.progress(progress)
-        
-        kalan_yazma = 10 - (st.session_state.cards_viewed_count % 10)
-        if kalan_yazma == 10:
-            st.caption(f"Kart {st.session_state.card_index + 1} / {len(words)} • ✍️ **Cümle Yazma Pratiği Kartı!**")
-        else:
-            st.caption(f"Kart {st.session_state.card_index + 1} / {len(words)} • Sonraki yazma pratiğine {kalan_yazma} kart kaldı")
+    deck = st.session_state.deck
+    total_cards = len(deck)
 
-        if mode in ["EN_TO_TR", "TR_TO_EN"]:
-            if mode == "EN_TO_TR":
-                badge_text = "🇬🇧 İngilizce ➔ 🇹🇷 Türkçe (Kelime)"
-                question_text = current_word["en"]
-                answer_text = current_word["tr"]
-                hint_text = "Türkçe anlamını görmek için aşağıdaki butona dokun 👇"
+    if total_cards > 0:
+        pos = st.session_state.deck_pos
+        if pos >= total_cards:
+            pos = 0
+            st.session_state.deck_pos = 0
+
+        item = deck[pos]
+        current_word = item["word"]
+        direction = item["direction"]
+
+        st.progress((pos + 1) / total_cards)
+        st.caption(f"Tur {st.session_state.round_number} • Kelime {pos + 1} / {total_cards} (Karışık Sıra)")
+
+        if direction == "EN_TO_TR":
+            badge_text = "🇬🇧 İngilizce ➔ 🇹🇷 Türkçe"
+            question_text = current_word["en"]
+            prompt_text = "Doğru Türkçe karşılığı seç:"
+        else:
+            badge_text = "🇹🇷 Türkçe ➔ 🇬🇧 İngilizce"
+            question_text = current_word["tr"]
+            prompt_text = "Doğru İngilizce karşılığı seç:"
+
+        example_html = ""
+        if item["answered"] and current_word.get("ex_en"):
+            example_html = (
+                f'<div class="example-box">'
+                f'<div class="example-en">"{current_word["ex_en"]}"</div>'
+                f'<div class="example-tr">{current_word.get("ex_tr", "")}</div>'
+                f'</div>'
+            )
+
+        card_html = (
+            f'<div class="word-card">'
+            f'<div class="lang-badge">{badge_text}</div>'
+            f'<div style="font-size:0.9rem; color:#52796F; font-weight:600; margin-bottom:4px;">{prompt_text}</div>'
+            f'<div class="word-main">{question_text}</div>'
+            f'{example_html}'
+            f'</div>'
+        )
+        st.markdown(card_html, unsafe_allow_html=True)
+
+        # Seslendirme butonları
+        if st.button("🔊 Kelimeyi Dinle", key=f"listen_word_{st.session_state.round_number}_{pos}"):
+            st.audio(generate_audio(current_word["en"]), format="audio/mp3", autoplay=True)
+
+        if item["answered"] and current_word.get("ex_en"):
+            if st.button("🗣️ Örnek Cümleyi Dinle", key=f"listen_ex_{st.session_state.round_number}_{pos}"):
+                st.audio(generate_audio(current_word["ex_en"]), format="audio/mp3", autoplay=True)
+
+        st.write("")
+
+        # 3 Seçenek
+        for opt_i, opt in enumerate(item["options"]):
+            if st.button(opt, key=f"opt_{st.session_state.round_number}_{pos}_{opt_i}", disabled=item["answered"]):
+                item["answered"] = True
+                item["selected"] = opt
+                item["is_correct"] = (opt == item["correct_answer"])
+                st.rerun()
+
+        if item["answered"]:
+            st.write("")
+            if item["is_correct"]:
+                st.success(f"✅ Doğru: **{item['correct_answer']}**")
             else:
-                badge_text = "🇹🇷 Türkçe ➔ 🇬🇧 İngilizce (Kelime)"
-                question_text = current_word["tr"]
-                answer_text = current_word["en"]
-                hint_text = "İngilizce karşılığını görmek için aşağıdaki butona dokun 👇"
+                st.error(f"❌ Seçimin: {item['selected']} | Doğru cevap: **{item['correct_answer']}**")
 
-            answer_html = f'<div class="word-answer">{answer_text}</div>' if st.session_state.show_meaning else f'<div style="color:#52796F; font-weight:500; margin-top:10px;">{hint_text}</div>'
-            
-            example_html = ""
-            if current_word.get("ex_en"):
-                if mode == "EN_TO_TR":
-                    ex_tr_display = current_word.get("ex_tr", "") if st.session_state.show_meaning else "<i>(Türkçe çeviri gizli)</i>"
-                    example_html = f'<div class="example-box"><div class="example-en">"{current_word["ex_en"]}"</div><div class="example-tr">{ex_tr_display}</div></div>'
-                else:
-                    if st.session_state.show_meaning:
-                        example_html = f'<div class="example-box"><div class="example-en">"{current_word["ex_en"]}"</div><div class="example-tr">{current_word.get("ex_tr", "")}</div></div>'
-
-            card_html = f'<div class="word-card"><div class="lang-badge">{badge_text}</div><div class="word-main">{question_text}</div>{answer_html}{example_html}</div>'
-            st.markdown(card_html, unsafe_allow_html=True)
-
-            if mode == "EN_TO_TR" or st.session_state.show_meaning:
-                if st.button("🔊 Kelimeyi Dinle", key="listen_word"):
-                    st.audio(generate_audio(current_word["en"]), format="audio/mp3", autoplay=True)
-                if current_word.get("ex_en"):
-                    if st.button("🗣️ Cümleyi Dinle", key="listen_sent"):
-                        st.audio(generate_audio(current_word["ex_en"]), format="audio/mp3", autoplay=True)
-
-            btn_label = "🙈 Cevabı Gizle" if st.session_state.show_meaning else "👀 Cevabı Göster"
-            if st.button(btn_label, key="toggle_meaning"):
-                st.session_state.show_meaning = not st.session_state.show_meaning
+        st.write("")
+        if pos < total_cards - 1:
+            if st.button("Sonraki Kelime ➡️", key=f"next_word_{st.session_state.round_number}_{pos}"):
+                st.session_state.deck_pos += 1
                 st.rerun()
-
-            if st.button("🎲 Rastgele Kart", key="rand_card"):
-                reset_card_state(random.randint(0, len(words) - 1))
-                st.rerun()
-
-            if st.button("Sonraki Kart ➡️", key="next_card"):
-                reset_card_state((st.session_state.card_index + 1) % len(words))
-                st.rerun()
-
-            if st.button("⬅️ Önceki Kart", key="prev_card"):
-                reset_card_state((st.session_state.card_index - 1) % len(words))
-                st.rerun()
-
         else:
-            if mode == "SENT_EN_TO_TR":
-                badge_text = "✍️ Cümle Çevirisi (10 Kartta 1): 🇬🇧 İngilizce ➔ 🇹🇷 Türkçe"
-                instruction = "Aşağıdaki İngilizce cümleyi Türkçeye çevir:"
-                source_sentence = current_word["ex_en"]
-                reference_text = current_word["ex_tr"]
-            else:
-                badge_text = "✍️ Cümle Çevirisi (10 Kartta 1): 🇹🇷 Türkçe ➔ 🇬🇧 İngilizce"
-                instruction = "Aşağıdaki Türkçe cümleyi İngilizceye çevir:"
-                source_sentence = current_word["ex_tr"]
-                reference_text = current_word["ex_en"]
-
-            card_html = f'<div class="word-card"><div class="lang-badge">{badge_text}</div><div style="font-size:0.95rem; color:#52796F; font-weight:600; margin-top:4px;">{instruction}</div><div class="sentence-main">"{source_sentence}"</div></div>'
-            st.markdown(card_html, unsafe_allow_html=True)
-
-            if mode == "SENT_EN_TO_TR":
-                if st.button("🔊 Cümleyi Dinle", key="listen_ai_sent"):
-                    st.audio(generate_audio(source_sentence), format="audio/mp3", autoplay=True)
-
-            st.text_area("Çevirini buraya yaz:", key=f"card_input_{st.session_state.cards_viewed_count}", height=85, placeholder="Cümlenizi buraya yazabilirsiniz...")
-
-            show_ref_key = f"show_ref_{st.session_state.cards_viewed_count}"
-            if show_ref_key not in st.session_state:
-                st.session_state[show_ref_key] = False
-
-            btn_ref_label = "🙈 Doğru Cevabı Gizle" if st.session_state[show_ref_key] else "👀 Doğru Cevabı Göster"
-            if st.button(btn_ref_label, key="btn_toggle_ref"):
-                st.session_state[show_ref_key] = not st.session_state[show_ref_key]
+            if st.button("🔄 Yeni Karışık Sırayla Başla", key=f"reshuffle_end_{st.session_state.round_number}"):
+                st.session_state.round_number += 1
+                init_level_deck(level)
                 st.rerun()
 
-            if st.session_state[show_ref_key]:
-                st.info(f"💡 **Örnek Doğru Çeviri:**\n\n{reference_text}\n\n🎯 **İçerdiği Hedef Kelime:** {current_word['en']} ({current_word['tr']})")
-                if mode == "SENT_TR_TO_EN":
-                    if st.button("🔊 Doğru İngilizce Cümleyi Dinle", key="listen_ideal_card"):
-                        st.audio(generate_audio(reference_text), format="audio/mp3", autoplay=True)
-
-            if st.button("🎲 Rastgele Kart", key="rand_sent_card"):
-                reset_card_state(random.randint(0, len(words) - 1))
-                st.rerun()
-
-            if st.button("Sonraki Kart ➡️", key="next_sent_card"):
-                reset_card_state((st.session_state.card_index + 1) % len(words))
-                st.rerun()
-
-            if st.button("⬅️ Önceki Kart", key="prev_sent_card"):
-                reset_card_state((st.session_state.card_index - 1) % len(words))
-                st.rerun()
-
-# --- SEKME 2: 10 SORULUK MINI QUIZ ---
-with tab2:
-    questions = st.session_state.quiz_questions
-    total_q = len(questions)
-
-    if st.session_state.quiz_finished:
-        score = st.session_state.quiz_score
-        percent = int((score / total_q) * 100)
-
-        if percent >= 80:
-            emoji_title = "🏆 Harika İş Çıkardın!"
-            msg = "Kelime bilgin çok sağlam görünüyor!"
-        elif percent >= 50:
-            emoji_title = "👍 Güzel Çaba!"
-            msg = "Biraz daha tekrarla mükemmel olacak."
-        else:
-            emoji_title = "📚 Tekrar Zamanı!"
-            msg = "Kelime kartlarına biraz daha göz atıp tekrar deneyebilirsin."
-
-        st.markdown(f"""
-        <div class="score-box">
-            <div style="font-size: 1.3rem; font-weight: 700; color: #2D6A4F;">{emoji_title}</div>
-            <div class="score-big">{score} / {total_q}</div>
-            <div style="font-size: 1.1rem; font-weight: 600; color: #1B4332;">Başarı Oranı: %{percent}</div>
-            <p style="margin-top: 10px;">{msg}</p>
-        </div>
-        """, unsafe_allow_html=True)
-
-        if st.button("🔄 Yeni 10 Soruluk Quiz Başlat", key="restart_quiz"):
-            init_quiz_session(level)
+        if st.button("🔀 Sırayı Şimdi Yeniden Karıştır", key=f"reshuffle_anytime_{st.session_state.round_number}_{pos}"):
+            st.session_state.round_number += 1
+            init_level_deck(level)
             st.rerun()
 
-    else:
-        idx = st.session_state.quiz_current_idx
-        q = questions[idx]
-        q_word = q["word"]
-        q_type = q["q_type"]
-
-        st.progress((idx + 1) / total_q)
-        st.caption(f"Soru **{idx + 1} / {total_q}** • Mevcut Doğru Sayısı: **{st.session_state.quiz_score}**")
-
-        if q_type in ["EN_TO_TR", "TR_TO_EN"]:
-            if q_type == "EN_TO_TR":
-                q_badge = "🇬🇧 İngilizce ➔ 🇹🇷 Türkçe (Kelime)"
-                q_prompt = "Bu kelimenin Türkçe karşılığı nedir?"
-                q_display = q_word["en"]
-            else:
-                q_badge = "🇹🇷 Türkçe ➔ 🇬🇧 İngilizce (Kelime)"
-                q_prompt = "Bu ifadenin İngilizce karşılığı nedir?"
-                q_display = q_word["tr"]
-
-            quiz_card_html = f'<div class="word-card"><div class="lang-badge">{q_badge}</div><div style="font-size: 0.95rem; color: #52796F; font-weight: 600;">{q_prompt}</div><div class="word-main" style="margin-top: 8px;">{q_display}</div></div>'
-            st.markdown(quiz_card_html, unsafe_allow_html=True)
-
-            if q_type == "EN_TO_TR" or q["answered"]:
-                if st.button("🔊 İngilizce Telaffuzunu Dinle", key=f"quiz_audio_{idx}"):
-                    st.audio(generate_audio(q_word["en"]), format="audio/mp3", autoplay=True)
-
-            for opt_i, opt in enumerate(q["options"]):
-                if st.button(opt, key=f"q_{idx}_opt_{opt_i}", disabled=q["answered"]):
-                    q["answered"] = True
-                    q["selected"] = opt
-                    if opt == q["correct_answer"]:
-                        q["is_correct"] = True
-                        st.session_state.quiz_score += 1
-                    else:
-                        q["is_correct"] = False
-                    st.rerun()
-
-            if q["answered"]:
-                if q["is_correct"]:
-                    st.success(f"✅ Doğru! Cevap: **{q['correct_answer']}**")
-                else:
-                    st.error(f"❌ Yanlış! Senin seçimin: {q['selected']} | Doğru cevap: **{q['correct_answer']}**")
-
-                if q_word.get("ex_en"):
-                    st.info(f"💡 **Örnek Cümle:** {q_word['ex_en']}\n\n*{q_word.get('ex_tr', '')}*")
-
-                next_label = "Sonuçları Gör 🏁" if idx == total_q - 1 else "Sonraki Soruya Geç ➡️"
-                if st.button(next_label, key=f"next_mc_{idx}"):
-                    if idx == total_q - 1:
-                        st.session_state.quiz_finished = True
-                    else:
-                        st.session_state.quiz_current_idx += 1
-                    st.rerun()
-
-        else:
-            if q_type == "SENT_EN_TO_TR":
-                q_badge = "✍️ Cümle Çevirisi: 🇬🇧 İngilizce ➔ 🇹🇷 Türkçe"
-                q_prompt = "Bu İngilizce cümleyi Türkçeye çevir:"
-            else:
-                q_badge = "✍️ Cümle Çevirisi: 🇹🇷 Türkçe ➔ 🇬🇧 İngilizce"
-                q_prompt = "Bu Türkçe cümleyi İngilizceye çevir:"
-
-            quiz_card_html = f'<div class="word-card"><div class="lang-badge">{q_badge}</div><div style="font-size: 0.95rem; color: #52796F; font-weight: 600; margin-top:4px;">{q_prompt}</div><div class="sentence-main">"{q["source_sentence"]}"</div></div>'
-            st.markdown(quiz_card_html, unsafe_allow_html=True)
-
-            if q_type == "SENT_EN_TO_TR":
-                if st.button("🔊 Cümleyi Dinle", key=f"quiz_sent_audio_{idx}"):
-                    st.audio(generate_audio(q["source_sentence"]), format="audio/mp3", autoplay=True)
-
-            user_ans = st.text_area("Çevirini buraya yaz:", value=q["user_input"], key=f"quiz_txt_{idx}", height=85, disabled=q["answered"])
-
-            if not q["answered"]:
-                if st.button("👀 Cevabı Kontrol Et", key=f"check_sent_{idx}"):
-                    q["user_input"] = user_ans
-                    q["answered"] = True
-                    sim = check_sentence_similarity(user_ans, q["reference_translation"])
-                    if not user_ans.strip() or sim < 0.45:
-                        q["is_correct"] = False
-                    else:
-                        q["is_correct"] = True
-                        st.session_state.quiz_score += 1
-                    st.rerun()
-
-            if q["answered"]:
-                if q["is_correct"]:
-                    st.success("✅ Doğru / Çok Yakın Çeviri!")
-                else:
-                    if not q["user_input"].strip():
-                        st.error("❌ Yanlış! Herhangi bir çeviri yazmadınız.")
-                    else:
-                        st.error("❌ Yanlış / Eksik Çeviri! Aşağıdaki doğru örnekle karşılaştırabilirsiniz.")
-
-                st.info(f"💡 **Örnek Doğru Cevap:**\n\n{q['reference_translation']}\n\n🎯 **Test Edilen Kelime:** {q_word['en']} ({q_word['tr']})")
-
-                if not q["is_correct"]:
-                    if st.button("Aslında Doğru Yazdım (+1 Puan)", key=f"override_true_{idx}"):
-                        q["is_correct"] = True
-                        st.session_state.quiz_score += 1
-                        st.rerun()
-                else:
-                    if st.button("Aslında Yanlış Yazdım (-1 Puan)", key=f"override_false_{idx}"):
-                        q["is_correct"] = False
-                        st.session_state.quiz_score -= 1
-                        st.rerun()
-
-                if q_type == "SENT_TR_TO_EN":
-                    if st.button("🔊 Doğru İngilizce Cümleyi Dinle", key=f"listen_ideal_quiz_{idx}"):
-                        st.audio(generate_audio(q["reference_translation"]), format="audio/mp3", autoplay=True)
-
-                next_label = "Sonuçları Gör 🏁" if idx == total_q - 1 else "Sonraki Soruya Geç ➡️"
-                if st.button(next_label, key=f"next_sent_{idx}"):
-                    if idx == total_q - 1:
-                        st.session_state.quiz_finished = True
-                    else:
-                        st.session_state.quiz_current_idx += 1
-                    st.rerun()
-
-# --- SEKME 3: YENİ KELİME EKLEME MENÜSÜ ---
-with tab3:
+# --- SEKME 2: YENİ KELİME EKLEME ---
+with tab2:
     st.markdown("### ➕ Sözlüğe Yeni Kelime Ekle")
-    st.write("Derste öğrendiğiniz yeni kelimeleri buradan sisteme ekleyebilirsiniz.")
+    st.write("Öğrendiğiniz yeni kelimeleri buradan ekleyebilirsiniz.")
 
     with st.form("add_word_form", clear_on_submit=True):
         target_lvl = st.selectbox("Hangi Kura Eklensin?", ["B1", "B2"], index=0 if level == "B1" else 1)
@@ -674,12 +420,14 @@ with tab3:
                 }
                 st.session_state.words_db[target_lvl].append(new_entry)
                 save_words(st.session_state.words_db)
+                if target_lvl == level:
+                    init_level_deck(level)
                 st.success(f"✅ **{new_en}** başarıyla **{target_lvl}** listesine eklendi!")
             else:
-                st.warning("⚠️ Lütfen en azından İngilizce kelime ve Türkçe anlamı alanlarını doldurun.")
+                st.warning("⚠️ Lütfen İngilizce kelime ve Türkçe anlamı alanlarını doldurun.")
 
-# --- SEKME 4: TÜM KELİME LİSTESİ ---
-with tab4:
+# --- SEKME 3: TÜM KELİME LİSTESİ ---
+with tab3:
     st.markdown(f"### 📋 {level} Seviyesi Tüm Kelimeler ({len(words)} Adet)")
     search_term = st.text_input("🔍 Kelime Ara...", placeholder="İngilizce veya Türkçe yazın...")
 
