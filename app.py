@@ -150,90 +150,180 @@ DATA_FILE = "kelimeler.json"
 
 INITIAL_DATA = {
     "B1": [
-        {"en": "Reckless", "tr": "pervasız, düşüncesizce riskli", "ex_en": "He was fined for reckless driving on the highway.", "ex_tr": "Otoyolda pervasızca araç kullanmaktan ceza yedi."},
-        {"en": "Overlook", "tr": "gözden kaçırmak", "ex_en": "It is easy to overlook small details when you are tired.", "ex_tr": "Yorgun olduğunda küçük detayları gözden kaçırmak kolaydır."},
-        {"en": "Deliberately", "tr": "kasıtlı olarak, bile bile", "ex_en": "She deliberately left her phone at home to enjoy the peace.", "ex_tr": "Huzurun tadını çıkarmak için telefonunu kasıtlı olarak evde bıraktı."},
-        {"en": "Thorough", "tr": "titiz, eksiksiz, kapsamlı", "ex_en": "The police carried out a thorough investigation.", "ex_tr": "Polis kapsamlı bir soruşturma yürüttü."},
-        {"en": "Assumption", "tr": "varsayım", "ex_en": "We shouldn't make assumptions without seeing the evidence.", "ex_tr": "Kanıtları görmeden varsayımlarda bulunmamalıyız."},
-        {"en": "Conceal", "tr": "gizlemek, saklamak", "ex_en": "He tried to conceal his disappointment behind a smile.", "ex_tr": "Hayal kırıklığını bir gülümsemenin arkasına gizlemeye çalıştı."},
-        {"en": "Crucial", "tr": "hayati, kritik, çok önemli", "ex_en": "Drinking enough water is crucial for your health.", "ex_tr": "Yeterince su içmek sağlığınız için hayati önem taşır."},
-        {"en": "Scrutinize", "tr": "dikkatle incelemek, didik didik etmek", "ex_en": "Lawyers will scrutinize every word of the contract.", "ex_tr": "Avukatlar sözleşmenin her kelimesini dikkatle inceleyecek."},
-        {"en": "Vulnerable", "tr": "savunmasız, kırılgan", "ex_en": "Young birds are very vulnerable to predators.", "ex_tr": "Yavru kuşlar yırtıcılara karşı çok savunmasızdır."},
-        {"en": "Consequence", "tr": "sonuç (çoğu zaman olumsuz)", "ex_en": "Every action has a consequence.", "ex_tr": "Her eylemin bir sonucu vardır."},
-        {"en": "Own up (to)", "tr": "suçunu itiraf etmek, kabullenmek", "ex_en": "Nobody owned up to breaking the window.", "ex_tr": "Kimse camı kırdığını itiraf etmedi."},
-        {"en": "Cover up", "tr": "örtbas etmek", "ex_en": "The company tried to cover up the financial scandal.", "ex_tr": "Şirket finansal skandalı örtbas etmeye çalıştı."},
-        {"en": "Jump to conclusions", "tr": "aceleyle yargıya varmak", "ex_en": "Don't jump to conclusions before hearing her side of the story.", "ex_tr": "Hikayenin bir de onun tarafını dinlemeden aceleyle yargıya varma."},
-        {"en": "Take something into account", "tr": "hesaba katmak, göz önünde bulundurmak", "ex_en": "You must take traffic into account when planning your trip.", "ex_tr": "Seyahatini planlarken trafiği hesaba katmalısın."},
-        {"en": "Draw a conclusion", "tr": "sonuca varmak, sonuç çıkarmak", "ex_en": "It is too early to draw a conclusion from these results.", "ex_tr": "Bu sonuçlardan bir çıkarım yapmak için henüz çok erken."},
-        {"en": "Get rid of", "tr": "-den kurtulmak, atmak", "ex_en": "I need to get rid of these old clothes.", "ex_tr": "Bu eski kıyafetlerden kurtulmam gerekiyor."},
-        {"en": "Go through", "tr": "gözden geçirmek, incelemek", "ex_en": "Let's go through the presentation one more time.", "ex_tr": "Sunumu bir kez daha gözden geçirelim."},
-        {"en": "Make an effort", "tr": "çaba göstermek", "ex_en": "You have to make an effort if you want to learn English.", "ex_tr": "İngilizce öğrenmek istiyorsan çaba göstermelisin."},
-        {"en": "Take the blame", "tr": "suçu üstlenmek", "ex_en": "The manager decided to take the blame for the team's mistake.", "ex_tr": "Müdür, ekibin hatası için suçu üstlenmeye karar verdi."},
-        {"en": "Come to light", "tr": "gün yüzüne çıkmak, ortaya çıkmak", "ex_en": "New evidence has recently come to light.", "ex_tr": "Son zamanlarda yeni kanıtlar gün yüzüne çıktı."},
-        {"en": "Hesitate", "tr": "tereddüt etmek, duraksamak", "ex_en": "Please do not hesitate to call me if you need help.", "ex_tr": "Yardıma ihtiyacın olursa beni aramaktan çekinme."},
-        {"en": "Reluctant", "tr": "isteksiz, gönülsüz", "ex_en": "He was reluctant to admit that he was wrong.", "ex_tr": "Hatalı olduğunu kabul etmekte isteksizdi."},
-        {"en": "Ambitious", "tr": "hırslı, iddialı", "ex_en": "She is an ambitious young lawyer.", "ex_tr": "O, hırslı bir genç avukattır."},
-        {"en": "Compromise", "tr": "uzlaşma, orta yol (bulmak)", "ex_en": "In a marriage, both partners must learn to compromise.", "ex_tr": "Evlilikte her iki taraf da uzlaşmayı öğrenmelidir."},
-        {"en": "Regret", "tr": "pişman olmak, pişmanlık", "ex_en": "I regret not studying harder for the exam.", "ex_tr": "Sınava daha sıkı çalışmadığıma pişmanım."},
-        {"en": "Inevitable", "tr": "kaçınılmaz", "ex_en": "Change is an inevitable part of life.", "ex_tr": "Değişim hayatın kaçınılmaz bir parçasıdır."},
-        {"en": "Persuade", "tr": "ikna etmek", "ex_en": "I finally managed to persuade him to come with us.", "ex_tr": "Sonunda onu bizimle gelmeye ikna etmeyi başardım."},
-        {"en": "Feasible", "tr": "uygulanabilir, yapılabilir", "ex_en": "Your plan sounds great, but is it economically feasible?", "ex_tr": "Planın kulağa harika geliyor ama ekonomik olarak uygulanabilir mi?"},
-        {"en": "Setback", "tr": "aksilik, engel, gerileme", "ex_en": "The bad weather was a major setback for the construction.", "ex_tr": "Kötü hava koşulları inşaat için büyük bir aksilik oldu."},
-        {"en": "Anticipate", "tr": "öngörmek, önceden tahmin etmek", "ex_en": "We anticipate that ticket sales will increase next month.", "ex_tr": "Gelecek ay bilet satışlarının artacağını öngörüyoruz."}
+        {"en": "Reckless", "tr": "pervasız, düşüncesizce riskli", "ex_en": "Reckless behavior can lead to serious problems.", "ex_tr": "Pervasız davranışlar ciddi sorunlara yol açabilir."},
+        {"en": "Overlook", "tr": "gözden kaçırmak", "ex_en": "It is easy to overlook small details when you are in a hurry.", "ex_tr": "Acele ederken küçük ayrıntıları gözden kaçırmak kolaydır."},
+        {"en": "Deliberately", "tr": "kasıtlı olarak, bile bile", "ex_en": "She deliberately ignored the message.", "ex_tr": "Mesajı kasıtlı olarak görmezden geldi."},
+        {"en": "Thorough", "tr": "titiz, eksiksiz, kapsamlı", "ex_en": "They did a thorough check before starting.", "ex_tr": "Başlamadan önce kapsamlı bir kontrol yaptılar."},
+        {"en": "Assumption", "tr": "varsayım", "ex_en": "That assumption turned out to be wrong.", "ex_tr": "Bu varsayımın yanlış olduğu ortaya çıktı."},
+        {"en": "Conceal", "tr": "gizlemek, saklamak", "ex_en": "He tried to conceal the truth from everyone.", "ex_tr": "Gerçeği herkesten gizlemeye çalıştı."},
+        {"en": "Crucial", "tr": "hayati, kritik, çok önemli", "ex_en": "Good planning is crucial for success.", "ex_tr": "İyi planlama başarı için çok önemlidir."},
+        {"en": "Scrutinize", "tr": "dikkatle incelemek, didik didik etmek", "ex_en": "They will scrutinize every part of the report.", "ex_tr": "Raporun her kısmını dikkatle inceleyecekler."},
+        {"en": "Vulnerable", "tr": "savunmasız, kırılgan", "ex_en": "The system is vulnerable to sudden changes.", "ex_tr": "Sistem ani değişikliklere karşı savunmasızdır."},
+        {"en": "Consequence", "tr": "sonuç (çoğu zaman olumsuz)", "ex_en": "Every choice has a consequence.", "ex_tr": "Her seçimin bir sonucu vardır."},
+        {"en": "Own up (to)", "tr": "suçunu itiraf etmek, kabullenmek", "ex_en": "He finally owned up to his mistake.", "ex_tr": "Sonunda hatasını itiraf etti."},
+        {"en": "Cover up", "tr": "örtbas etmek", "ex_en": "They tried to cover up the problem.", "ex_tr": "Sorunu örtbas etmeye çalıştılar."},
+        {"en": "Jump to conclusions", "tr": "aceleyle yargıya varmak", "ex_en": "Don't jump to conclusions before knowing all the facts.", "ex_tr": "Tüm gerçekleri öğrenmeden aceleyle yargıya varma."},
+        {"en": "Take something into account", "tr": "hesaba katmak, göz önünde bulundurmak", "ex_en": "We need to take every detail into account.", "ex_tr": "Her ayrıntıyı hesaba katmamız gerekiyor."},
+        {"en": "Draw a conclusion", "tr": "sonuca varmak, sonuç çıkarmak", "ex_en": "It is hard to draw a conclusion right now.", "ex_tr": "Şu anda bir sonuca varmak zor."},
+        {"en": "Get rid of", "tr": "-den kurtulmak, atmak", "ex_en": "It's time to get rid of old files.", "ex_tr": "Eski dosyalardan kurtulma zamanı."},
+        {"en": "Go through", "tr": "gözden geçirmek, incelemek", "ex_en": "Let's go through the list together.", "ex_tr": "Listeyi birlikte gözden geçirelim."},
+        {"en": "Make an effort", "tr": "çaba göstermek", "ex_en": "You should make an effort to improve.", "ex_tr": "Gelişmek için çaba göstermelisin."},
+        {"en": "Take the blame", "tr": "suçu üstlenmek", "ex_en": "Nobody wanted to take the blame.", "ex_tr": "Kimse suçu üstlenmek istemedi."},
+        {"en": "Come to light", "tr": "gün yüzüne çıkmak, ortaya çıkmak", "ex_en": "New facts came to light yesterday.", "ex_tr": "Dün yeni gerçekler gün yüzüne çıktı."},
+        {"en": "Hesitate", "tr": "tereddüt etmek, duraksamak", "ex_en": "Don't hesitate to ask if you need anything.", "ex_tr": "Bir şeye ihtiyacın olursa sormaktan çekinme."},
+        {"en": "Reluctant", "tr": "isteksiz, gönülsüz", "ex_en": "He seemed reluctant to answer.", "ex_tr": "Cevap vermekte isteksiz görünüyordu."},
+        {"en": "Ambitious", "tr": "hırslı, iddialı", "ex_en": "She has an ambitious plan for this year.", "ex_tr": "Bu yıl için iddialı bir planı var."},
+        {"en": "Compromise", "tr": "uzlaşma, orta yol (bulmak)", "ex_en": "Both sides reached a fair compromise.", "ex_tr": "İki taraf adil bir uzlaşmaya vardı."},
+        {"en": "Regret", "tr": "pişman olmak, pişmanlık", "ex_en": "I don't want to regret this decision later.", "ex_tr": "Daha sonra bu karardan pişman olmak istemiyorum."},
+        {"en": "Inevitable", "tr": "kaçınılmaz", "ex_en": "Change is inevitable over time.", "ex_tr": "Zamanla değişim kaçınılmazdır."},
+        {"en": "Persuade", "tr": "ikna etmek", "ex_en": "Can you persuade him to join us?", "ex_tr": "Onu bize katılmaya ikna edebilir misin?"},
+        {"en": "Feasible", "tr": "uygulanabilir, yapılabilir", "ex_en": "Is this idea feasible in practice?", "ex_tr": "Bu fikir pratikte uygulanabilir mi?"},
+        {"en": "Setback", "tr": "aksilik, engel, gerileme", "ex_en": "The delay was a minor setback.", "ex_tr": "Gecikme küçük bir aksilikti."},
+        {"en": "Anticipate", "tr": "öngörmek, önceden tahmin etmek", "ex_en": "We didn't anticipate such a quick response.", "ex_tr": "Bu kadar hızlı bir yanıt öngörmemiştik."},
+        {"en": "Turn down", "tr": "reddetmek, geri çevirmek", "ex_en": "She turned down the offer politely.", "ex_tr": "Teklifi kibarca geri çevirdi."},
+        {"en": "Take up", "tr": "(bir uğraşa) başlamak", "ex_en": "He decided to take up a new hobby.", "ex_tr": "Yeni bir uğraşa başlamaya karar verdi."},
+        {"en": "Put off", "tr": "ertelemek", "ex_en": "Let's not put off the meeting again.", "ex_tr": "Toplantıyı yine ertelemeyelim."},
+        {"en": "Come up with", "tr": "(fikir/çözüm) bulmak", "ex_en": "They came up with a smart solution.", "ex_tr": "Akıllıca bir çözüm buldular."},
+        {"en": "Make up your mind", "tr": "karar vermek", "ex_en": "Have you made up your mind yet?", "ex_tr": "Henüz kararını verdin mi?"},
+        {"en": "Take a risk", "tr": "risk almak", "ex_en": "Sometimes you have to take a risk.", "ex_tr": "Bazen risk alman gerekir."},
+        {"en": "Look forward to", "tr": "dört gözle beklemek", "ex_en": "I look forward to seeing you soon.", "ex_tr": "Seni yakında görmeyi dört gözle bekliyorum."},
+        {"en": "Settle down", "tr": "yerleşik düzene geçmek", "ex_en": "They want to settle down in a quiet town.", "ex_tr": "Sakin bir kasabada yerleşik düzene geçmek istiyorlar."},
+        {"en": "Pay off", "tr": "karşılığını vermek, meyvesini vermek", "ex_en": "Hard work usually pays off in the end.", "ex_tr": "Sıkı çalışma sonunda genellikle karşılığını verir."},
+        {"en": "Weigh up", "tr": "tartmak, artısını eksisini düşünmek", "ex_en": "We should weigh up the pros and cons first.", "ex_tr": "Önce artıları ve eksileri tartmalıyız."},
+        {"en": "Remarkable", "tr": "dikkate değer, olağanüstü", "ex_en": "She made remarkable progress this month.", "ex_tr": "Bu ay dikkate değer bir ilerleme kaydetti."},
+        {"en": "Preserve", "tr": "korumak, muhafaza etmek", "ex_en": "We must preserve old traditions.", "ex_tr": "Eski gelenekleri korumalıyız."},
+        {"en": "Fragile", "tr": "kırılgan, narin", "ex_en": "Handle this package carefully; it is fragile.", "ex_tr": "Bu paketi dikkatli taşı; kırılgan."},
+        {"en": "Genuine", "tr": "gerçek, hakiki, sahte olmayan", "ex_en": "This is a genuine piece of work.", "ex_tr": "Bu gerçek bir eser."},
+        {"en": "Reveal", "tr": "ortaya çıkarmak, açığa vurmak", "ex_en": "The results will reveal the truth.", "ex_tr": "Sonuçlar gerçeği ortaya çıkaracak."},
+        {"en": "Restore", "tr": "restore etmek, eski haline getirmek", "ex_en": "Workers are trying to restore the old building.", "ex_tr": "Çalışanlar eski binayı eski haline getirmeye çalışıyor."},
+        {"en": "Estimate", "tr": "tahmin etmek, tahmin", "ex_en": "It is difficult to estimate the exact cost.", "ex_tr": "Tam maliyeti tahmin etmek zor."},
+        {"en": "Invaluable", "tr": "paha biçilemez, çok değerli", "ex_en": "Her advice was invaluable to the team.", "ex_tr": "Tavsiyeleri ekip için paha biçilemezdi."},
+        {"en": "Heritage", "tr": "(kültürel) miras", "ex_en": "Protecting our cultural heritage is important.", "ex_tr": "Kültürel mirasımızı korumak önemlidir."},
+        {"en": "Widespread", "tr": "yaygın", "ex_en": "The new habit has become widespread.", "ex_tr": "Yeni alışkanlık yaygın hale geldi."},
+        {"en": "Dig up", "tr": "kazıp çıkarmak", "ex_en": "They dug up old records during research.", "ex_tr": "Araştırma sırasında eski kayıtları kazıp çıkardılar."},
+        {"en": "Set up", "tr": "kurmak", "ex_en": "We set up a simple system for tracking.", "ex_tr": "Takip için basit bir sistem kurduk."},
+        {"en": "Carry out", "tr": "yürütmek, gerçekleştirmek", "ex_en": "The team carried out the plan smoothly.", "ex_tr": "Ekip planı sorunsuz şekilde yürüttü."},
+        {"en": "Hand over", "tr": "teslim etmek, devretmek", "ex_en": "He handed over the keys at the end of the day.", "ex_tr": "Günün sonunda anahtarları teslim etti."},
+        {"en": "Break into", "tr": "(bir yere) zorla girmek", "ex_en": "Someone tried to break into the office at night.", "ex_tr": "Gece birisi ofise zorla girmeye çalıştı."},
+        {"en": "Pull down", "tr": "yıkmak", "ex_en": "They decided to pull down the damaged wall.", "ex_tr": "Hasarlı duvarı yıkmaya karar verdiler."},
+        {"en": "Keep an eye on", "tr": "göz kulak olmak", "ex_en": "Could you keep an eye on the bag for a minute?", "ex_tr": "Çantaya bir dakikalığına göz kulak olabilir misin?"},
+        {"en": "Make headlines", "tr": "manşetlere çıkmak", "ex_en": "The story made headlines across the country.", "ex_tr": "Haber ülke genelinde manşetlere çıktı."},
+        {"en": "Draw attention to", "tr": "dikkat çekmek", "ex_en": "The report draws attention to key issues.", "ex_tr": "Rapor temel sorunlara dikkat çekiyor."},
+        {"en": "Put on display", "tr": "sergilemek", "ex_en": "The best works were put on display.", "ex_tr": "En iyi eserler sergilendi."}
     ],
     "B2": [
-        {"en": "Meticulous", "tr": "titiz, özenli", "ex_en": "She is meticulous about keeping accurate records.", "ex_tr": "Doğru kayıtlar tutma konusunda çok titizdir."},
-        {"en": "Ephemeral", "tr": "geçici, kısa ömürlü", "ex_en": "Fame in the social media age is often ephemeral.", "ex_tr": "Sosyal medya çağında şöhret genellikle kısa ömürlüdür."},
-        {"en": "Resilient", "tr": "dirençli, dayanıklı", "ex_en": "Children are often more resilient than adults think.", "ex_tr": "Çocuklar genellikle yetişkinlerin düşündüğünden daha dayanıklıdır."},
-        {"en": "Arbitrary", "tr": "keyfi, rastgele", "ex_en": "The decision seemed completely arbitrary and unfair.", "ex_tr": "Karar tamamen keyfi ve adaletsiz görünüyordu."},
-        {"en": "Pragmatic", "tr": "pragmatik, gerçekçi", "ex_en": "We need a pragmatic approach to solve this budget issue.", "ex_tr": "Bu bütçe sorununu çözmek için gerçekçi bir yaklaşıma ihtiyacımız var."},
-        {"en": "Redundant", "tr": "gereksiz, fazlalık", "ex_en": "Remove any redundant words to make your essay clearer.", "ex_tr": "Makaleni daha net hale getirmek için gereksiz kelimeleri çıkar."},
-        {"en": "Tenuous", "tr": "zayıf, belirsiz", "ex_en": "The connection between the two events is very tenuous.", "ex_tr": "İki olay arasındaki bağlantı çok zayıf."},
-        {"en": "Discern", "tr": "ayırt etmek, fark etmek", "ex_en": "It is difficult to discern the truth from his story.", "ex_tr": "Onun hikayesinden gerçeği ayırt etmek zor."},
-        {"en": "Exacerbate", "tr": "kötüleştirmek, şiddetlendirmek", "ex_en": "Loud noise will only exacerbate my headache.", "ex_tr": "Yüksek gürültü baş ağrımı daha da şiddetlendirecek."},
-        {"en": "Eloquent", "tr": "güzel ve etkili konuşan", "ex_en": "She gave an eloquent speech that moved the audience.", "ex_tr": "Dinleyicileri etkileyen güzel ve etkili bir konuşma yaptı."},
-        {"en": "Bring about", "tr": "neden olmak, meydana getirmek", "ex_en": "New technology has brought about huge changes in education.", "ex_tr": "Yeni teknoloji eğitimde büyük değişiklikler meydana getirdi."},
-        {"en": "Ubiquitous", "tr": "her yerde bulunan, yaygın", "ex_en": "Coffee shops have become ubiquitous in modern cities.", "ex_tr": "Kahve dükkanları modern şehirlerde her yerde bulunur hale geldi."},
-        {"en": "Ambivalent", "tr": "kararsız, ikircikli", "ex_en": "Many people feel ambivalent about working from home.", "ex_tr": "Birçok insan evden çalışma konusunda ikircikli hissediyor."},
-        {"en": "Candid", "tr": "açık sözlü, dürüst", "ex_en": "Thank you for your candid feedback on my design.", "ex_tr": "Tasarımım hakkındaki açık sözlü geri bildirimin için teşekkür ederim."},
-        {"en": "Innate", "tr": "doğuştan gelen", "ex_en": "She has an innate talent for music and rhythm.", "ex_tr": "Müzik ve ritim konusunda doğuştan gelen bir yeteneği var."},
-        {"en": "Dexterous", "tr": "becerikli, usta", "ex_en": "Surgeons need to be extremely dexterous with their hands.", "ex_tr": "Cerrahların ellerini son derece ustalıkla kullanmaları gerekir."},
-        {"en": "Conducive", "tr": "elverişli, uygun", "ex_en": "A quiet room is more conducive to studying.", "ex_tr": "Sessiz bir oda ders çalışmak için daha elverişlidir."},
-        {"en": "Pertinent", "tr": "ilgili, alakalı", "ex_en": "Please ask questions that are pertinent to the topic.", "ex_tr": "Lütfen konuyla alakalı sorular sorun."},
-        {"en": "Plausible", "tr": "makul, akla yatkın", "ex_en": "Her explanation sounded completely plausible.", "ex_tr": "Açıklaması kulağa tamamen akla yatkın geliyordu."},
-        {"en": "Compelling", "tr": "ikna edici, sürükleyici", "ex_tr": "The lawyer presented a compelling argument.", "ex_tr": "Avukat ikna edici bir argüman sundu."}
+        {"en": "Meticulous", "tr": "titiz, özenli", "ex_en": "She is meticulous about every small detail.", "ex_tr": "Her küçük ayrıntı konusunda titizdir."},
+        {"en": "Ephemeral", "tr": "geçici, kısa ömürlü", "ex_en": "Trends in this area are often ephemeral.", "ex_tr": "Bu alandaki trendler genellikle kısa ömürlüdür."},
+        {"en": "Resilient", "tr": "dirençli, dayanıklı", "ex_en": "They built a resilient structure against pressure.", "ex_tr": "Baskıya karşı dayanıklı bir yapı kurdular."},
+        {"en": "Arbitrary", "tr": "keyfi, rastgele", "ex_en": "The rule felt completely arbitrary.", "ex_tr": "Kural tamamen keyfi hissettirdi."},
+        {"en": "Pragmatic", "tr": "pragmatik, gerçekçi", "ex_en": "We took a pragmatic approach to the problem.", "ex_tr": "Soruna gerçekçi bir yaklaşımla yaklaştık."},
+        {"en": "Redundant", "tr": "gereksiz, fazlalık", "ex_en": "We removed redundant steps from the process.", "ex_tr": "Süreçteki gereksiz adımları kaldırdık."},
+        {"en": "Tenuous", "tr": "zayıf, belirsiz", "ex_en": "The link between the two claims is tenuous.", "ex_tr": "İki iddia arasındaki bağ zayıf."},
+        {"en": "Discern", "tr": "ayırt etmek, fark etmek", "ex_en": "It takes time to discern real differences.", "ex_tr": "Gerçek farkları ayırt etmek zaman alır."},
+        {"en": "Exacerbate", "tr": "kötüleştirmek, şiddetlendirmek", "ex_en": "Ignoring it will only exacerbate the issue.", "ex_tr": "Görmezden gelmek sorunu daha da kötüleştirecek."},
+        {"en": "Eloquent", "tr": "güzel ve etkili konuşan", "ex_en": "He gave an eloquent explanation of his view.", "ex_tr": "Görüşünü güzel ve etkili bir şekilde açıkladı."},
+        {"en": "Bring about", "tr": "neden olmak, meydana getirmek", "ex_en": "Small changes can bring about big results.", "ex_tr": "Küçük değişiklikler büyük sonuçlar meydana getirebilir."},
+        {"en": "Carry out", "tr": "gerçekleştirmek, yürütmek", "ex_en": "They carried out the task on schedule.", "ex_tr": "Görevi planlanan zamanda gerçekleştirdiler."},
+        {"en": "Come up with", "tr": "bulmak, ortaya çıkarmak", "ex_en": "She came up with a fresh angle.", "ex_tr": "Yeni bir bakış açısı buldu."},
+        {"en": "Give in", "tr": "pes etmek, boyun eğmek", "ex_en": "They refused to give in to pressure.", "ex_tr": "Baskıya boyun eğmeyi reddettiler."},
+        {"en": "Hold back", "tr": "kendini tutmak, geri durmak", "ex_en": "He held back from making a hasty comment.", "ex_tr": "Aceleci bir yorum yapmaktan kendini tuttu."},
+        {"en": "Look into", "tr": "araştırmak, incelemek", "ex_en": "We will look into this matter carefully.", "ex_tr": "Bu konuyu dikkatle araştıracağız."},
+        {"en": "Put off", "tr": "ertelemek", "ex_en": "They had to put off the release.", "ex_tr": "Yayınlamayı ertelemek zorunda kaldılar."},
+        {"en": "Rule out", "tr": "olasılığı ortadan kaldırmak", "ex_en": "We cannot rule out other possibilities yet.", "ex_tr": "Henüz diğer olasılıkları dışlayamayız."},
+        {"en": "Set out", "tr": "yola çıkmak, girişmek", "ex_en": "They set out early in the morning.", "ex_tr": "Sabah erken saatte yola çıktılar."},
+        {"en": "Stem from", "tr": "kaynaklanmak", "ex_en": "Most of the confusion stems from unclear terms.", "ex_tr": "Kafa karışıklığının çoğu belirsiz ifadelerden kaynaklanıyor."},
+        {"en": "Ubiquitous", "tr": "her yerde bulunan, yaygın", "ex_en": "Smartphones have become ubiquitous.", "ex_tr": "Akıllı telefonlar her yerde bulunur hale geldi."},
+        {"en": "Ambivalent", "tr": "kararsız, ikircikli", "ex_en": "He felt ambivalent about moving away.", "ex_tr": "Uzaklaşma konusunda ikircikli hissediyordu."},
+        {"en": "Tumultuous", "tr": "çalkantılı, gürültülü", "ex_en": "It was a tumultuous period for everyone.", "ex_tr": "Herkes için çalkantılı bir dönemdi."},
+        {"en": "Candid", "tr": "açık sözlü, dürüst", "ex_en": "I appreciate your candid feedback.", "ex_tr": "Açık sözlü geri bildirimin için teşekkür ederim."},
+        {"en": "Innate", "tr": "doğuştan gelen", "ex_en": "She seems to have an innate sense of rhythm.", "ex_tr": "Doğuştan gelen bir ritim duygusuna sahip görünüyor."},
+        {"en": "Dexterous", "tr": "becerikli, usta", "ex_en": "He is remarkably dexterous with tools.", "ex_tr": "Aletler konusunda son derece becerikli."},
+        {"en": "Conducive", "tr": "elverişli, uygun", "ex_en": "A calm environment is conducive to focus.", "ex_tr": "Sakin bir ortam odaklanmaya elverişlidir."},
+        {"en": "Pertinent", "tr": "ilgili, alakalı", "ex_en": "Please stick to pertinent points.", "ex_tr": "Lütfen konuyla alakalı noktalara bağlı kalın."},
+        {"en": "Apathy", "tr": "ilgisizlik, kayıtsızlık", "ex_en": "Public apathy made the change harder.", "ex_tr": "Kayıtsızlık değişimi daha zor hale getirdi."},
+        {"en": "Anomaly", "tr": "anomali, sapma", "ex_en": "The data showed a clear anomaly.", "ex_tr": "Veriler net bir sapma gösterdi."},
+        {"en": "Account for", "tr": "açıklamak", "ex_en": "This factor accounts for the difference.", "ex_tr": "Bu etken farkı açıklıyor."},
+        {"en": "Break down", "tr": "bozulmak, incelemek", "ex_en": "Let's break down the steps one by one.", "ex_tr": "Adımları tek tek inceleyelim."},
+        {"en": "Call off", "tr": "iptal etmek", "ex_en": "They decided to call off the event.", "ex_tr": "Etkinliği iptal etmeye karar verdiler."},
+        {"en": "Cut back on", "tr": "azaltmak", "ex_en": "I need to cut back on screen time.", "ex_tr": "Ekran süresini azaltmam gerekiyor."},
+        {"en": "Delve into", "tr": "derinlemesine incelemek", "ex_en": "We will delve into the details later.", "ex_tr": "Ayrıntıları daha sonra derinlemesine inceleyeceğiz."},
+        {"en": "Fall through", "tr": "suya düşmek", "ex_en": "The original plan fell through at the last minute.", "ex_tr": "İlk plan son dakikada suya düştü."},
+        {"en": "Get around to", "tr": "nihayet vakit ayırmak", "ex_en": "I finally got around to organizing the notes.", "ex_tr": "Notları düzenlemeye nihayet vakit ayırdım."},
+        {"en": "Iron out", "tr": "(sorunu) çözmek", "ex_en": "We still need to iron out a few details.", "ex_tr": "Hâlâ birkaç ayrıntıyı çözmemiz gerekiyor."},
+        {"en": "Keep up with", "tr": "ayak uydurmak", "ex_en": "It is hard to keep up with every update.", "ex_tr": "Her güncellemeye ayak uydurmak zor."},
+        {"en": "Weigh up", "tr": "tartmak, değerlendirmek", "ex_en": "Take time to weigh up both options.", "ex_tr": "Her iki seçeneği değerlendirmek için zaman ayır."},
+        {"en": "Discrepancy", "tr": "aksaklık", "ex_en": "There was a small discrepancy in the numbers.", "ex_tr": "Sayılar arasında küçük bir aksaklık vardı."},
+        {"en": "Complaint", "tr": "şikayet", "ex_en": "They received a complaint about the delay.", "ex_tr": "Gecikmeyle ilgili bir şikayet aldılar."},
+        {"en": "Cope with", "tr": "üstesinden gelmek", "ex_en": "Good habits help you cope with stress.", "ex_tr": "İyi alışkanlıklar stresin üstesinden gelmene yardımcı olur."},
+        {"en": "Ambiguity", "tr": "belirsizlik, şüpheci oluş", "ex_en": "We should avoid ambiguity in instructions.", "ex_tr": "Talimatlarda belirsizlikten kaçınmalıyız."},
+        {"en": "Merger", "tr": "birleşme", "ex_en": "The merger was announced last week.", "ex_tr": "Birleşme geçen hafta duyuruldu."},
+        {"en": "Vaguely", "tr": "belirsiz bir şekilde", "ex_en": "I vaguely remember hearing that name.", "ex_tr": "O ismi duyduğumu belirsiz bir şekilde hatırlıyorum."},
+        {"en": "Thrived", "tr": "gelişme", "ex_en": "The project thrived under clear leadership.", "ex_tr": "Proje net bir liderlik altında gelişti."},
+        {"en": "Friction", "tr": "sürtünme", "ex_en": "Too much friction slows down progress.", "ex_tr": "Fazla sürtünme ilerlemeyi yavaşlatır."},
+        {"en": "Feud", "tr": "kavga", "ex_en": "The long feud finally ended.", "ex_tr": "Uzun süren kavga nihayet sona erdi."},
+        {"en": "Adamant", "tr": "kararlı, ısrarcı", "ex_en": "She remained adamant about her decision.", "ex_tr": "Kararı konusunda kararlı kaldı."},
+        {"en": "Deceptive", "tr": "aldatıcı, yanıltıcı", "ex_en": "First impressions can sometimes be deceptive.", "ex_tr": "İlk izlenimler bazen yanıltıcı olabilir."},
+        {"en": "Daunting", "tr": "göz korkutucu, zorlu", "ex_en": "Starting from scratch can feel daunting.", "ex_tr": "Sıfırdan başlamak göz korkutucu gelebilir."},
+        {"en": "Skeptical", "tr": "şüpheci", "ex_en": "He was skeptical about the quick promise.", "ex_tr": "Hızlı vaade karşı şüpheciydi."},
+        {"en": "Fabricate", "tr": "uydurmak", "ex_en": "Nobody should fabricate excuses.", "ex_tr": "Kimse bahane uydurmamalı."},
+        {"en": "Subside", "tr": "yatışmak, azalmak", "ex_en": "The noise finally began to subside.", "ex_tr": "Gürültü sonunda azalmaya başladı."},
+        {"en": "Glean", "tr": "(bilgi) edinmek, toplamak", "ex_en": "We gleaned useful insights from the notes.", "ex_tr": "Notlardan faydalı bilgiler edindik."},
+        {"en": "Plausible", "tr": "makul, akla yatkın", "ex_en": "Her explanation sounds quite plausible.", "ex_tr": "Açıklaması oldukça makul görünüyor."},
+        {"en": "Compelling", "tr": "ikna edici, sürükleyici", "ex_en": "They made a compelling case for the change.", "ex_tr": "Değişiklik için ikna edici bir gerekçe sundular."},
+        {"en": "Reluctant", "tr": "isteksiz, gönülsüz", "ex_en": "He was reluctant to share the details.", "ex_tr": "Ayrıntıları paylaşmakta isteksizdi."},
+        {"en": "Back down", "tr": "geri adım atmak", "ex_en": "Neither side wanted to back down.", "ex_tr": "Hiçbir taraf geri adım atmak istemedi."},
+        {"en": "Bring up", "tr": "(bir konuyu) gündeme getirmek", "ex_en": "She brought up the topic during the meeting.", "ex_tr": "Toplantı sırasında konuyu gündeme getirdi."},
+        {"en": "Come across", "tr": "rastlamak/izlenim vermek", "ex_en": "I came across an interesting article today.", "ex_tr": "Bugün ilginç bir makaleye rastladım."},
+        {"en": "Deal with", "tr": "ele almak, halletmek", "ex_en": "We will deal with this issue right away.", "ex_tr": "Bu sorunu hemen ele alacağız."},
+        {"en": "Figure out", "tr": "çözmek, anlamak", "ex_en": "It took a few minutes to figure out the cause.", "ex_tr": "Nedeni anlamak birkaç dakika sürdü."},
+        {"en": "Get away with", "tr": "yanına kar kalmak", "ex_en": "They shouldn't get away with breaking rules.", "ex_tr": "Kuralları çiğnemek yanlarına kar kalmamalı."},
+        {"en": "Hold up", "tr": "geçerliliğini korumak/geciktirmek", "ex_en": "Traffic held us up on the way.", "ex_tr": "Yolda trafik bizi geciktirdi."},
+        {"en": "Lead to", "tr": "yol açmak, neden olmak", "ex_en": "Careless habits can lead to mistakes.", "ex_tr": "Dikkatsiz alışkanlıklar hatalara yol açabilir."},
+        {"en": "Make up for", "tr": "telafi etmek", "ex_en": "We can make up for the lost time tomorrow.", "ex_tr": "Kaybedilen zamanı yarın telafi edebiliriz."},
+        {"en": "Point out", "tr": "belirtmek, işaret etmek", "ex_en": "He pointed out a key detail in the text.", "ex_tr": "Metindeki önemli bir ayrıntıya dikkat çekti."},
+        {"en": "Once in a blue moon", "tr": "kırk yılda bir", "ex_en": "We eat out once in a blue moon.", "ex_tr": "Kırk yılda bir dışarıda yeriz."},
+        {"en": "Cupboard (British)", "tr": "dolap", "ex_en": "The mugs are in the kitchen cupboard.", "ex_tr": "Kupalar mutfak dolabında."},
+        {"en": "Cabinet (USA)", "tr": "dolap", "ex_en": "Check the top cabinet for extra supplies.", "ex_tr": "Ekstra malzemeler için üst dolabı kontrol et."}
     ]
 }
-
-def merge_with_initial_data(loaded):
-    merged = {}
-    for lvl in ["B1", "B2"]:
-        base_items = INITIAL_DATA.get(lvl, [])
-        loaded_items = loaded.get(lvl, []) if isinstance(loaded, dict) else []
-        seen_en = {item.get("en", "").strip().lower() for item in base_items if item.get("en")}
-        combined = list(base_items)
-        for item in loaded_items:
-            en_key = item.get("en", "").strip().lower()
-            if en_key and en_key not in seen_en:
-                combined.append(item)
-                seen_en.add(en_key)
-        merged[lvl] = combined
-    return merged
 
 def load_words():
     if not os.path.exists(DATA_FILE):
         with open(DATA_FILE, "w", encoding="utf-8") as f:
             json.dump(INITIAL_DATA, f, ensure_ascii=False, indent=4)
-        return INITIAL_DATA
+        return {
+            "B1": list(INITIAL_DATA["B1"]),
+            "B2": list(INITIAL_DATA["B2"])
+        }
     try:
         with open(DATA_FILE, "r", encoding="utf-8") as f:
             data = json.load(f)
-            merged = merge_with_initial_data(data)
-            if merged != data:
-                save_words(merged)
-            return merged
+        synced = {
+            "B1": list(INITIAL_DATA["B1"]),
+            "B2": list(INITIAL_DATA["B2"])
+        }
+        if isinstance(data, dict):
+            for lvl in ["B1", "B2"]:
+                base_keys = {item["en"].strip().lower() for item in synced[lvl]}
+                for item in data.get(lvl, []):
+                    en_val = str(item.get("en", "")).strip()
+                    tr_val = str(item.get("tr", "")).strip()
+                    if en_val and tr_val and en_val.lower() not in base_keys:
+                        synced[lvl].append({
+                            "en": en_val,
+                            "tr": tr_val,
+                            "ex_en": str(item.get("ex_en", "")).strip(),
+                            "ex_tr": str(item.get("ex_tr", "")).strip()
+                        })
+                        base_keys.add(en_val.lower())
+        with open(DATA_FILE, "w", encoding="utf-8") as f:
+            json.dump(synced, f, ensure_ascii=False, indent=4)
+        return synced
     except Exception:
-        return INITIAL_DATA
+        return {
+            "B1": list(INITIAL_DATA["B1"]),
+            "B2": list(INITIAL_DATA["B2"])
+        }
 
 def save_words(data):
     with open(DATA_FILE, "w", encoding="utf-8") as f:
